@@ -36,7 +36,6 @@ var getPolygonAndGuards = function(file, callback) {
 				vertices = extractPoints(vertexString[0]);
 
 			var guardString = string.match(/;.+/);
-			console.log(guardString);
 			var guards = [];
 			if(typeof guardString === 'object' && guardString != null && guardString.length == 1)
 				guards = extractPoints(guardString[0]);
