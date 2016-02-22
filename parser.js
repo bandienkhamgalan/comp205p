@@ -20,9 +20,9 @@ var Polygon = function(vertices) {
 	// compute min and max
 	var allX = [];
 	var allY = [];
-	for(var i = 0; i < points.length; i++) {
-		allX.push(points[i].x);
-		allY.push(points[i].y);
+	for(var i = 0; i < vertices.length; i++) {
+		allX.push(vertices[i].x);
+		allY.push(vertices[i].y);
 	}
 
 	this.minX = Math.min(...allX);
@@ -35,11 +35,11 @@ var Polygon = function(vertices) {
 	// compute lines
 	this.lines = [];
 	for (var i = 0; i < vertices.length; i++) {
-		if ( i == numberOfVertices - 1 ) {
-			lines.push(new Line(vertices[i], vertices[0]));
+		if ( i == vertices.length - 1 ) {
+			this.lines.push(new Line(vertices[i], vertices[0]));
 			break;
 		}
-		lines.push(new Line(vertices[i], vertices[i+1]));
+		this.lines.push(new Line(vertices[i], vertices[i+1]));
 	}
 };
 
@@ -64,6 +64,62 @@ Polygon.prototype.containsPoint = function(point) {
 	return intersections % 2 == 1;
 }
 
+// Return [[Point]]
+Polygon.prototype.findEars = function() {
+	var ears = [];
+	var vertices = this.vertices.slice();
+	var index = 0;
+	while(index < vertices.length) {
+		var currentVertex = vertices[index];
+		var preVertex = index - 1 >= 0 ? vertices[index - 1] : vertices.slice(-1)[0];
+		var nextVertex = index + 1 < vertices.length ? vertices[index + 1] : vertices[0];
+
+		if(turnDirection(preVertex, currentVertex, nextVertex) == left)
+		{
+			// convex vertex (ear candidate)
+			var potentialEar = new Polygon([preVertex, currentVertex, nextVertex]);
+			var containsVertices = false;
+			for( var vertexIndex = 0 ; vertexIndex < vertices.length ; vertexIndex++ ) {
+				var vertex = vertices[index];
+				if( vertex != currentVertex && vertex != preVertex && vertex != nextVertex ) {
+					if( potentialEar.containsPoint(vertex) ) {
+						containsVertices = true;
+						break;
+					}
+				}
+			}
+ 
+			if(!containsVertices) {
+				ears.push([this.vertices.indexOf(preVertex), this.vertices.indexOf(currentVertex), this.vertices.indexOf(nextVertex)]);
+				vertices.splice(index, 1);
+			}
+		} 
+		index++;
+	}
+	return ears;
+}
+
+Polygon.prototype.colorVertices = function() {
+	if(this.vertices.length >= 3) {
+		var ears = this.findEars();
+		this.vertices[ears[ears.length - 1][0]].color = "r";
+		this.vertices[ears[ears.length - 1][1]].color = "g";
+		this.vertices[ears[ears.length - 1][2]].color = "b";
+		for( var i = ears.length - 2 ; i >= 0 ; i-- ) {
+			var unseenColors = "rgb";
+			var vertexToAddColor;
+			for( var j = 0 ; j < 3 ; j++ ) {
+				var currentColor =  this.vertices[ears[i][j]].color;
+				if( typeof currentColor === 'undefined')
+					vertexToAddColor = this.vertices[ears[i][j]];
+				else
+					unseenColors = unseenColors.replace(currentColor, "");
+			}
+			vertexToAddColor.color = unseenColors;
+		}
+	}
+}
+
 // Return [CheckablePolygon]
 var getPolygonAndGuards = function(file, callback) {
 	var reader = new FileReader();
@@ -85,7 +141,7 @@ var getPolygonAndGuards = function(file, callback) {
 			if(typeof guardString === 'object' && guardString != null && guardString.length == 1)
 				guards = extractPoints(guardString[0]);
 
-			polygons.push({ polygon: new Polygon(vertices), guards: guards });
+			output.push({ polygon: new Polygon(vertices), guards: guards });
 		};
 
 		callback(output);

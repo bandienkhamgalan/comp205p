@@ -70,33 +70,3 @@ var turnDirection = function(a, b, c) {
 var left = -1;
 var right = 1;
 var parallel = 0;
-
-// Return [number] (list of indices)
-function findEars(polygon) {
-	var ears = [];
-	for(var index = 0 ; index < polygon.vertices.length ; index++ ) {
-		var currentVertex = polygon.vertices[index];
-		var preVertex = index - 1 >= 0 ? vertices[index - 1] : vertices.slice(-1);
-		var nextVertex = index + 1 < vertices.length ? vertices[index + 1] : vertices[0];
-
-		if(turnDirection(preVertex, currentVertex, nextVertex) == left)
-		{
-			// convex vertex (ear candidate)
-			var potentialEar = new Polygon([preVertex, currentVertex, nextVertex]);
-			var containsVertices = false;
-			for( var vertexIndex = 0 ; vertexIndex < polygon.vertices.length ; vertexIndex++ ) {
-				var vertex = polygon.vertices[index];
-				if( vertex != currentVertex && vertex != preVertex && vertex != nextVertex ) {
-					if( potentialEar.containsPoint(vertex) ) {
-						containsVertices = true;
-						break;
-					}
-				}
-			}
-
-			if(!containsVertices)
-				ears.push(index);
-		}
-	}
-	return ears;
-}
