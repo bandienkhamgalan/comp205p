@@ -2,8 +2,14 @@
 <script type="text/javascript" src="parser.js"></script>
 <script type="text/javascript" src="canvas.js"></script>
 <script type="text/javascript" src="visibility.js"></script>
+<style type="text/css">
+  body {
+    margin: 0;
+  }
+</style>
 <body>
-<canvas id="myCanvas">Sorry, update your browser</canvas>
+<canvas id="myCanvas" onload="init()">Sorry, update your browser</canvas>
+<script> initCanvas(); </script>
 <input type="file" name="inputFile" id="inputFile" onchange="getPolygonAndGuards(this.files[0])"></input>
 </body>
 </html>
