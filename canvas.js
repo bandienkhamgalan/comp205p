@@ -41,6 +41,7 @@ function drawEverything(pag) {
 
   scaleCanvas(c, pag[17].vertices);
   drawPolygon(c, pag[17].vertices);
+  drawGuardPoints(c, pag[17].guards);
 }
 
 function scaleCanvas(c, points) {
@@ -67,4 +68,13 @@ function drawPolygon(c, points) {
   c.lineTo(points[0].x, points[0].y);
   c.closePath();
   c.fill();  
+}
+
+function drawGuardPoints(c, points) {
+  c.fillStyle = 'red';
+  for(var i = 0; i < points.length; i++) {
+    c.beginPath();
+    c.arc(points[i].x,points[i].y,0.1,0,2*Math.PI);
+    c.fill();
+  }
 }
