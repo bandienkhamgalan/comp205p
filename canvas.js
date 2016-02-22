@@ -1,18 +1,3 @@
-var minMax = function(points) {
-  var allX = [];
-  var allY = [];
-  for(var i = 0; i < points.length; i++) {
-    allX.push(points[i].x);
-    allY.push(points[i].y);
-  }
-  this.minX = Math.min(...allX);
-  this.minY = Math.min(...allY);
-  this.maxX = Math.max(...allX);
-  this.maxY = Math.max(...allY);
-  this.rangeX = this.maxX - this.minX;
-  this.rangeY = this.maxY - this.minY;
-}
-
 function initCanvas() {
 
   var canvas = document.getElementById("myCanvas");
@@ -36,12 +21,12 @@ function newFile(file) {
 function drawEverything(pag) {
   var canvas = document.getElementById("myCanvas");
   var c = canvas.getContext('2d');
+
   c.setTransform(1,0,0,1,0,0);
   c.clearRect(0,0, canvas.width, canvas.height);
 
   scaleCanvas(c, pag[17].vertices);
   drawPolygon(c, pag[17].vertices);
-  drawGuardPoints(c, pag[17].guards);
 }
 
 function scaleCanvas(c, points) {
@@ -68,13 +53,4 @@ function drawPolygon(c, points) {
   c.lineTo(points[0].x, points[0].y);
   c.closePath();
   c.fill();  
-}
-
-function drawGuardPoints(c, points) {
-  c.fillStyle = 'red';
-  for(var i = 0; i < points.length; i++) {
-    c.beginPath();
-    c.arc(points[i].x,points[i].y,0.1,0,2*Math.PI);
-    c.fill();
-  }
 }
