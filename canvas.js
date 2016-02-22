@@ -13,12 +13,14 @@ var minMax = function(points) {
   this.rangeY = this.maxY - this.minY;
 }
 
+var pago;
+
 function initCanvas() {
 
   var canvas = document.getElementById("myCanvas");
 
   canvas.width = window.innerWidth - 10;
-  canvas.height = window.innerHeight - 10;
+  canvas.height = window.innerHeight - 40;
 
   //var pag = getPolygonAndGuards(fileName);
 
@@ -29,19 +31,26 @@ function initCanvas() {
 
 function newFile(file) {
   getPolygonAndGuards(file, function(pag) {
+    pago = pag;
     drawEverything(pag);
   });
+}
+
+function newMap() {
+  drawEverything(pago);
 }
 
 function drawEverything(pag) {
   var canvas = document.getElementById("myCanvas");
   var c = canvas.getContext('2d');
+  var mapId = parseInt(document.getElementById("mapId").value) - 1;
+  console.log(mapId)
   c.setTransform(1,0,0,1,0,0);
   c.clearRect(0,0, canvas.width, canvas.height);
 
-  scaleCanvas(c, pag[17].vertices);
-  drawPolygon(c, pag[17].vertices);
-  drawGuardPoints(c, pag[17].guards);
+  scaleCanvas(c, pag[mapId].vertices);
+  drawPolygon(c, pag[mapId].vertices);
+  drawGuardPoints(c, pag[mapId].guards);
 }
 
 function scaleCanvas(c, points) {
