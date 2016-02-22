@@ -19,7 +19,6 @@ function initCanvas() {
 
   canvas.width = window.innerWidth - 10;
   canvas.height = window.innerHeight - 10;
-  canvas.style.backgroundColor = "slategray";
 
   //var pag = getPolygonAndGuards(fileName);
 
@@ -30,7 +29,6 @@ function initCanvas() {
 
 function newFile(file) {
   getPolygonAndGuards(file, function(pag) {
-    console.log(JSON.stringify(pag[17]))
     drawEverything(pag);
   });
 }
@@ -38,6 +36,9 @@ function newFile(file) {
 function drawEverything(pag) {
   var canvas = document.getElementById("myCanvas");
   var c = canvas.getContext('2d');
+  c.setTransform(1,0,0,1,0,0);
+  c.clearRect(0,0, canvas.width, canvas.height);
+
   scaleCanvas(c, pag[17].vertices);
   drawPolygon(c, pag[17].vertices);
 }
