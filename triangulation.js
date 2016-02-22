@@ -55,8 +55,8 @@ var orientation = function(p, q, r) {
 }
 
 var onSegment = function(p, q, r) {
-	if (q.x <= max(p.x, r.x) && q.x >= min(p.x, r.x) &&
-        q.y <= max(p.y, r.y) && q.y >= min(p.y, r.y))
+	if (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
+        q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y))
     	return true;
  
     return false;
