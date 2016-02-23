@@ -1,4 +1,4 @@
-var pago;
+var pago, scaleFactor;
 
 function initCanvas() {
 
@@ -36,14 +36,29 @@ function drawEverything(pag) {
   c.clearRect(0,0, canvas.width, canvas.height);
 
   scaleCanvas(c, pag[mapId].polygon);
+
   drawPolygon(c, pag[mapId].polygon.vertices);
+
+  // draw triangles
+  var triangles = pag[mapId].polygon.findEars(); 
+  for( var index = 0 ; index < triangles.length ; index++ )
+  {
+    var ear = triangles[index];
+    c.beginPath();
+    c.moveTo(pag[mapId].polygon.vertices[ear[0]].x, pag[mapId].polygon.vertices[ear[0]].y);
+    c.lineTo(pag[mapId].polygon.vertices[ear[1]].x, pag[mapId].polygon.vertices[ear[1]].y);
+    c.lineTo(pag[mapId].polygon.vertices[ear[2]].x, pag[mapId].polygon.vertices[ear[2]].y);
+    c.closePath();
+    c.lineWidth=0.001 * 150 / scaleFactor;
+    c.stroke();
+  }
+
   drawGuardPoints(c, pag[mapId].guards);
 
   pag[mapId].polygon.printGuardPositions();
   drawColoredVertices(c, pag[mapId].polygon);
 
   // draw origin
-  
   c.fillStyle = 'yellow';
   c.beginPath();
   c.arc(0,0,0.05,0,2*Math.PI);
@@ -53,7 +68,7 @@ function drawEverything(pag) {
 function scaleCanvas(c, polygon) {
   var scaleFactorX = document.getElementById("myCanvas").offsetWidth / polygon.rangeX;
   var scaleFactorY = document.getElementById("myCanvas").offsetHeight / polygon.rangeY;
-  var scaleFactor = Math.min(scaleFactorX, scaleFactorY);
+  scaleFactor = Math.min(scaleFactorX, scaleFactorY);
   c.scale(scaleFactor, -scaleFactor);
   c.translate(-polygon.minX, -polygon.minY - polygon.rangeY);
   console.log(JSON.stringify(polygon))
@@ -61,7 +76,7 @@ function scaleCanvas(c, polygon) {
 }
 
 function drawPolygon(c, points) {
-  c.fillStyle = '#ffffff';
+  c.fillStyle = '#fff';
   c.beginPath();
   c.moveTo(points[0].x, points[0].y);
   var i = 1;

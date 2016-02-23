@@ -35,9 +35,7 @@ var visiblePolygon = function(reachableVertices, lines, guard){
 			}
 		}
 		// find intersections of line from guard to vertex & polygon (lines)
-
 	}
-
 }
 
 

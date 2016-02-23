@@ -9,10 +9,30 @@ Point.prototype.toString = function() {
 
 Point.prototype.equals = function(point) {
 	if(point instanceof Point)
-		return Math.abs(this.x - point.x) <= 0.0000000001 && Math.abs(this.y - point.y) <= 0.0000000001;
+		return equals(this.x, point.x) && equals(this.y - point.y);
 	else
 		return
 };
+
+var equals = function(a, b) {
+	return Math.abs(a - b) < 0.0000000001;
+}
+
+var greaterThan = function(a, b) {
+	return a - b >= 0.0000000001;
+}
+
+var greaterThanOrEqualTo = function(a, b) {
+	return greaterThan(a, b) || equals(a, b);
+}
+
+var lessThan = function(a, b) {
+	return b - a >= 0.0000000001;
+}
+
+var lessThanOrEqualTo = function(a, b) {
+	return lessThan(a, b) || equals(a, b);
+}
 
 var Polygon = function(vertices) {
 	this.vertices = vertices;
@@ -43,13 +63,17 @@ var Polygon = function(vertices) {
 	}
 };
 
+// boundary does not count
 Polygon.prototype.containsPoint = function(point) {
 	var intersections = 0;
 	var line = new Line(new Point(this.minX - 1, point.y), point);
 	for(var index = 0 ; index < this.lines.length ; index++) {
 		var side = this.lines[index];
+		if( side.containsPoint(point) )
+			return true;
+
 		if( line.intersects(side) ) {
-			if( side.pointA.y != point.y && side.pointB.y != point.y )
+			if( side.pointA.y != point.y && side.pointB.y != point.y ) // regular intersection
 				intersections++;
 			else
 			{
@@ -64,39 +88,92 @@ Polygon.prototype.containsPoint = function(point) {
 	return intersections % 2 == 1;
 }
 
+var DoublyLinkedCycle = function(value) {
+	this.value = value;
+	this.next = this;
+	this.previous = this;
+}
+
+DoublyLinkedCycle.prototype.insertAfter = function(value) {
+	var node = new DoublyLinkedCycle(value);
+	var oldNext = this.next;
+	this.next = node;
+	node.previous = this;
+	node.next = oldNext;
+	oldNext.previous = node;
+}
+
+DoublyLinkedCycle.prototype.delete = function() {
+	this.previous.next = this.next;
+	this.next.previous = this.previous;
+}
+
+// returns new DoublyLinkedCycle or null on empty/undefined input list
+DoublyLinkedCycle.fromArray = function(list) {
+	if(typeof list === 'object' && list.length > 0)
+	{
+		var toReturn = new DoublyLinkedCycle(list[0]);
+		var current = toReturn;
+		for( var index = 1 ; index < list.length ; index++ )
+		{
+			current.insertAfter(list[index]);
+			current = current.next;
+		}
+		return toReturn;
+	}
+	return null;
+};
+
+DoublyLinkedCycle.prototype.print = function() {
+	var currentNode = this;
+	do {
+		console.log(currentNode.value);
+		currentNode = currentNode.next;
+	} while(currentNode != this);
+}
+
 // Return [[Point]]
 Polygon.prototype.findEars = function() {
 	var ears = [];
-	var vertices = this.vertices.slice();
 	var index = 0;
-	while(vertices.length >= 3) {
-		var preVertex = vertices[(index - 1 + vertices.length) % vertices.length];
-		var currentVertex = vertices[index % vertices.length];
-		var nextVertex = vertices[(index + 1) % vertices.length];
+	var currentNode = DoublyLinkedCycle.fromArray(this.vertices);
+	vertices = this.vertices.length;
+	while(vertices >= 3) {
+		var currentVertex = currentNode.value;
+		var previousVertex = currentNode.previous.value;
+		var nextVertex = currentNode.next.value;
 
-		if(turnDirection(preVertex, currentVertex, nextVertex) == left)
+		if(turnDirection(previousVertex, currentVertex, nextVertex) == left)
 		{
 			// convex vertex (ear candidate)
-			var potentialEar = new Polygon([preVertex, currentVertex, nextVertex]);
+			var potentialEar = new Polygon([previousVertex, currentVertex, nextVertex]);
 			var containsVertices = false;
 
-			// check if "ear" contains other vertices of polygon
-			for( var vertexIndex = 0 ; vertexIndex < this.vertices.length ; vertexIndex++ ) {
-				var vertex = this.vertices[vertexIndex];
-				if( vertex != currentVertex && vertex != preVertex && vertex != nextVertex ) {
+			// check if "ear" contains other vertices in linked list
+			var node = currentNode.next.next;
+			while( node != currentNode.previous )
+			{
+				var vertex = node.value;
+				if( vertex != currentVertex && vertex != previousVertex && vertex != nextVertex ) {
 					if( potentialEar.containsPoint(vertex) ) {
 						containsVertices = true;
 						break;
 					}
 				}
+				node = node.next;
 			}
  
 			if(!containsVertices) {
-				ears.push([this.vertices.indexOf(preVertex), this.vertices.indexOf(currentVertex), this.vertices.indexOf(nextVertex)]);
-				vertices.splice(index % vertices.length, 1);
+				console.log('\tfound ear');
+				ears.push([this.vertices.indexOf(previousVertex), this.vertices.indexOf(currentVertex), this.vertices.indexOf(nextVertex)]);
+				var previousNode = currentNode.previous;
+				var nextNode = currentNode.next;
+				currentNode.delete();
+				currentNode = currentNode.next;
+				vertices--;
 			}
-		} 
-		index++;
+		}
+		currentNode = currentNode.next;
 	}
 	return ears;
 }
@@ -104,6 +181,7 @@ Polygon.prototype.findEars = function() {
 Polygon.prototype.colorVertices = function() {
 	if(this.vertices.length >= 3) {
 		var ears = this.findEars();
+		console.log("Coloring vertices");
 		this.vertices[ears[ears.length - 1][0]].color = "r";
 		this.vertices[ears[ears.length - 1][1]].color = "g";
 		this.vertices[ears[ears.length - 1][2]].color = "b";
@@ -155,7 +233,6 @@ var getPolygonAndGuards = function(file, callback) {
 		for(var index = 0 ; index < lines.length ; index++) {
 			var string = lines[index];
 			string = string.replace(/[^:]: /, "");
-
 
 			var vertexString = string.match(/[^;]+/);
 			var vertices = [];

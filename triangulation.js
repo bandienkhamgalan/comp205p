@@ -1,3 +1,4 @@
+
 Line.prototype.toVector = function() {
 	return new Point(this.pointB.x - this.pointA.x, this.pointB.y - this.pointA.y);
 };
@@ -43,6 +44,32 @@ Line.prototype.intersects = function(line) {
     if (o4 == 0 && onSegment(p2, q1, q2)) return true;
  
     return false; 
+}
+
+Line.prototype.gradient = function() {
+	if(equals(this.pointA.x, this.pointB.x)) 
+		return Infinity;
+	else if(equals(this.pointA.y, this.pointB.y))
+		return 0; 
+	else
+		return (this.pointA.y - this.pointB.y) / (this.pointA.x - this.pointB.x);
+}
+
+Line.prototype.containsPoint = function(point) { 
+	var gradient = this.gradient();
+	var lowerX = Math.min(this.pointA.x, this.pointB.x);
+	var lowerY = Math.min(this.pointA.y, this.pointB.y);
+	var higherX = Math.max(this.pointA.x, this.pointB.x);
+	var higherY = Math.max(this.pointA.y, this.pointB.y);
+	switch( gradient ) {
+		case Infinity:
+			return equals(this.pointA.x, point.x) && greaterThanOrEqualTo(point.y, lowerY) && lessThanOrEqualTo(point.y, higherY);
+		case 0:
+			return equals(this.pointA.y, point.y) && greaterThanOrEqualTo(point.x, lowerX) && lessThanOrEqualTo(point.x, higherX);
+		default:
+			var predictedYValue = gradient * (point.x - this.pointA.x) + this.pointA.y;
+			return greaterThanOrEqualTo(point.x, lowerX) && lessThanOrEqualTo(point.x, higherX) && equals(point.y, predictedYValue);
+	}
 }
 
 var orientation = function(p, q, r) {
