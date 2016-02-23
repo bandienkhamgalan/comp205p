@@ -46,14 +46,21 @@ function drawEverything(pag) {
   }
 
   // draw visibility polygon
-  var visibilityPolygon = fullVisibilityPolygon(pag[mapId].polygon, [pag[mapId].guards[0]]);
-  console.log(visibilityPolygon[0]);
-  drawPolygon(c, visibilityPolygon[0], "rgba(255, 255, 0, 0.25)");
+  var visibilityPolygons = fullVisibilityPolygon(pag[mapId].polygon, pag[mapId].guards);
+  var guardId = document.getElementById("guardId").value;
+  if (guardId < 0) {
+    for( var index = 0 ; index < visibilityPolygons.length ; index++)
+      drawPolygon(c, visibilityPolygons[index], ["rgba(255, 255, 0, 0.25)", "rgba(0, 255, 255, 0.25)"][index % 2]);
+      drawGuardPoints(c, pag[mapId].guards);
+  } else {
+    drawPolygon(c, visibilityPolygons[guardId], "rgba(255, 255, 0, 0.25)");
+    drawGuardPoints(c, [pag[mapId].guards[guardId]]);
+  }
 
-  pag[mapId].polygon.printGuardPositions();
-  drawColoredVertices(c, pag[mapId].polygon);
+  console.log(visibilityPolygons[guardId]);
 
-  drawGuardPoints(c, [pag[mapId].guards[0]]);
+  // pag[mapId].polygon.printGuardPositions();
+  // drawColoredVertices(c, pag[mapId].polygon);
 
   // draw origin
   c.fillStyle = 'yellow';

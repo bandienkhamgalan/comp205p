@@ -75,14 +75,14 @@ Polygon.prototype.containsPoint = function(point, boundariesIncluded) {
 			return boundariesIncluded;
 
 		if( line.intersects(side) ) {
-			if( side.pointA.y != point.y && side.pointB.y != point.y ) // regular intersection
+			if( !equals(side.pointA.y, point.y) && !equals(side.pointB.y, point.y) ) // regular intersection
 				intersections++;
 			else
 			{
 				// intersection is vertex
-				if( side.pointA.y == point.y && side.pointB.y < point.y )
+				if( equals(side.pointA.y, point.y) && lessThan(side.pointB.y, point.y) )
 					intersections++;
-				if( side.pointB.y == point.y && side.pointA.y < point.y )
+				if( equals(side.pointB.y, point.y) && lessThan(side.pointA.y, point.y) )
 					intersections++;
 			}
 		}
