@@ -6,14 +6,6 @@ function initCanvas() {
 
   canvas.width = window.innerWidth - 10;
   canvas.height = window.innerHeight - 40;
-
-
-
-  //var pag = getPolygonAndGuards(fileName);
-
-  //var pag = [new CheckablePolygon([new Point(-100,100), new Point(0,200), new Point(100,0)], [new Point(0,0), new Point(0,2), new Point(1,0)])]
-  //drawPolygon(pag[0].vertices)
-  
 }
 
 function newFile(file) {
@@ -53,15 +45,20 @@ function drawEverything(pag) {
     c.stroke();
   }
 
-  drawGuardPoints(c, pag[mapId].guards);
+  // draw visibility polygon
+  var visibilityPolygon = fullVisibilityPolygon(pag[mapId].polygon, [pag[mapId].guards[0]]);
+  console.log(visibilityPolygon[0]);
+  drawPolygon(c, visibilityPolygon[0], "rgba(255, 255, 0, 0.25)");
 
   pag[mapId].polygon.printGuardPositions();
   drawColoredVertices(c, pag[mapId].polygon);
 
+  drawGuardPoints(c, [pag[mapId].guards[0]]);
+
   // draw origin
   c.fillStyle = 'yellow';
   c.beginPath();
-  c.arc(0,0,0.05,0,2*Math.PI);
+  c.arc(0,0,0.025,0,2*Math.PI);
   c.fill();
 }
 
@@ -71,12 +68,10 @@ function scaleCanvas(c, polygon) {
   scaleFactor = Math.min(scaleFactorX, scaleFactorY);
   c.scale(scaleFactor, -scaleFactor);
   c.translate(-polygon.minX, -polygon.minY - polygon.rangeY);
-  console.log(JSON.stringify(polygon))
-  console.log(scaleFactor)
 }
 
 function drawPolygon(c, points) {
-  c.fillStyle = '#fff';
+  c.fillStyle = arguments.length == 3 ? arguments[2] : 'white';
   c.beginPath();
   c.moveTo(points[0].x, points[0].y);
   var i = 1;
@@ -99,10 +94,10 @@ function drawColoredVertices(c, polygon) {
 }
 
 function drawGuardPoints(c, points) {
-  c.fillStyle = 'red';
+  c.fillStyle = 'black';
   for(var i = 0; i < points.length; i++) {
     c.beginPath();
-    c.arc(points[i].x,points[i].y,0.1,0,2*Math.PI);
+    c.arc(points[i].x,points[i].y,0.05,0,2*Math.PI);
     c.fill();
   }
 }

@@ -3,53 +3,94 @@ var Line = function(pointA, pointB){
 	this.pointB = pointB;
 }
 
-var fullVisibilityPolygon = function(polygon, guards){
+var fullVisibilityPolygon = function(polygon, guards) {
 	var vertices = polygon.vertices;
 	
-	var lines = getLines(vertices);
+	var lines = polygon.lines;
 	
-	var visiblePolygons = []; // list of list of points
+	var visibilityPolygons = []; // list of list of points
 	var numberOfGuards = guards.length;
-	for (var i = 0; i < numberOfGuards; i++){
-		var reachableVert = reachableVertices(vertices, lines, guards[i]);
-		visiblePolygons.push(visiblePolygon(polygon, reachableVert, lines, guards[i]));
-		console.log("reachable: ");
-		console.log(reachableVert)
+	for ( var i = 0 ; i < numberOfGuards ; i++ ) {
+		var reachableVert = reachableVertices(vertices, polygon, guards[i]);
+		//console.log("reachable: ")
+		//console.log(reachableVert)
+		var extendedVertices = extendVisibleVertices(polygon, reachableVert, lines, guards[i]);
+		visibilityPolygons.push(visibleVerticesInOrder(polygon, extendedVertices));
 	}
-	console.log(visiblePolygons)
-	return visiblePolygons;
+
+	return visibilityPolygons;
 }
 
+var visibleVerticesInOrder = function(polygon, extendedVertices) {
+	var sorted = [];
+	for(var i = 0 ; i < polygon.lines.length ; i++ ) {
+		var currentLine = polygon.lines[i];
+		var verticesOnLine = [];
+		for(var j = 0 ; j < extendedVertices.length ; j++ )
+			if(currentLine.containsPoint(extendedVertices[j]))
+				verticesOnLine.push(extendedVertices[j]);
+		
+		// sort by distance from start of currentLine
+		verticesOnLine.sort((a, b) => {
+			var distanceToA = new Line(currentLine.pointA, a).length();
+			var distanceToB = new Line(currentLine.pointA, b).length();
+			return distanceToA - distanceToB;
+		});
 
-var visiblePolygon = function(polygon, reachableVertices, lines, guard){
+		sorted.push(...verticesOnLine);
+	}
+
+	if( sorted.length > 1 ) {
+		if( sorted[0] == sorted[sorted.length - 1] )
+			sorted.splice(sorted.length - 1, 1);
+
+		var lastUniqueValue = sorted[0];
+		var index = 1;
+		while( index < sorted.length ) {
+			if(sorted[index] == lastUniqueValue) {
+				sorted.splice(index, 1);
+			}
+			else {
+				lastUniqueValue = sorted[index];
+				index++;
+			}
+		}
+	}
+	
+	return sorted;
+}
+
+var extendVisibleVertices = function(polygon, reachableVertices, lines, guard){
 	var numberOfVertices = reachableVertices.length;
 	var numberOfLines = lines.length;
 	var visiblePolygon = [];
 
-	for (var i = 0; i < numberOfVertices; i++){
-		console.log("main loop")
+	for( var i = 0; i < numberOfVertices; i++ ) {
 		var intersectionPoints = [];
 		var deltaX = reachableVertices[i].x - guard.x;
 		var deltaY =  reachableVertices[i].y - guard.y;
 		var constant = 1000;
-		var boundaryPoint = new Point(reachableVertices[i].x + deltaX*constant, reachableVertices[i].y + deltaY*constant);
-		var lineFromVertexToBoundary = new Line(boundaryPoint,reachableVertices[i]);
-		console.log(reachableVertices[i])
-		for (var j = 0; j < numberOfLines; j++){
-			console.log("looooooooping")
-			console.log(lineFromVertexToBoundary)
-			console.log(lines[j])
+		var boundaryPoint = new Point(reachableVertices[i].x + deltaX * constant, reachableVertices[i].y + deltaY * constant);
+		var lineFromVertexToBoundary = new Line(boundaryPoint, reachableVertices[i]);
+
+		var pointImmediatelyAfter = new Point(reachableVertices[i].x + deltaX * epsilon, reachableVertices[i].y + deltaY * epsilon);
+		if( !polygon.containsPoint(pointImmediatelyAfter, true) ) {
+			// cannot see past polygon boundary, move on to next visible vertex
+			visiblePolygon.push(reachableVertices[i]);
+			continue;
+		}
+
+		// finding polygon edges that intersect with extended ray
+		for (var j = 0; j < numberOfLines; j++) {
 			var intersectionPoint = intersectionOfSegments(lineFromVertexToBoundary, lines[j]);
-			console.log("intersection point: ");
-			console.log(intersectionPoint);
 			if((intersectionPoint != null) && (!((intersectionPoint.x == lines[j].pointA.x) && (intersectionPoint.y == lines[j].pointA.y)))){
 				if(!((intersectionPoint.x == lines[j].pointB.x) && (intersectionPoint.y == lines[j].pointB.y))){
 					intersectionPoints.push(intersectionPoint);
 				}
 			}
 		}
+
 		// go through intersection points and find point closest to the vertex
-		console.log(intersectionPoints)
 		var minDistance = Infinity;
 		var closestPoint = null;
 		for(var k = 0; k < intersectionPoints.length; k++){
@@ -60,34 +101,13 @@ var visiblePolygon = function(polygon, reachableVertices, lines, guard){
 				closestPoint = intersectionPoints[k];
 			}
 		}
+
+
 		if(closestPoint != null){
 			var midPoint = new Point((closestPoint.x + reachableVertices[i].x)/2.0, (closestPoint.y + reachableVertices[i].y)/2.0);
-			if(polygon.containsPoint(midPoint)){
-				if((closestPoint.y == reachableVertices[i].y) || (closestPoint.x == reachableVertices[i].x)){
-					visiblePolygon.push(reachableVertices[i]);
-					visiblePolygon.push(closestPoint);
-				}
-				else if(closestPoint.y > reachableVertices[i].y){
-					if(closestPoint.x > reachableVertices[i].x){
-						visiblePolygon.push(closestPoint);
-						visiblePolygon.push(reachableVertices[i]);
-					}
-					else{
-						visiblePolygon.push(reachableVertices[i]);
-						visiblePolygon.push(closestPoint);
-					}
-				}
-				else{
-					if(closestPoint.x > reachableVertices[i].x){
-						visiblePolygon.push(reachableVertices[i]);
-						visiblePolygon.push(closestPoint);
-					}
-					else{
-						visiblePolygon.push(closestPoint);
-						visiblePolygon.push(reachableVertices[i]);
-					}
-				}
-
+			if(polygon.containsPoint(midPoint, true)){
+				visiblePolygon.push(reachableVertices[i]);
+				visiblePolygon.push(closestPoint);
 			}
 			else{
 				visiblePolygon.push(reachableVertices[i]);
@@ -97,7 +117,7 @@ var visiblePolygon = function(polygon, reachableVertices, lines, guard){
 			visiblePolygon.push(reachableVertices[i]);
 		}
 	}
-	return visiblePolygon
+	return visiblePolygon.sort((a, b) => {  })
 }
 
 var intersectionOfSegments = function(lineA, lineB){
@@ -127,89 +147,56 @@ var intersectionOfSegments = function(lineA, lineB){
     return intersection;
 }
 
-
-
-// var visiblePolygon = function(reachableVertices, lines, guard){
-// 	var numberOfVertices = reachableVertices.length;
-// 	var numberOfLines = lines.length;
-// 	var visiblePolygon;
-
-// 	for (var i = 0; i < numberOfVertices; i++){
-// 		var guardToVertexGradient = computeGradient(guard, reachableVertices[i]);
-// 		var guardToVertexintercept;
-// 		if (guardToVertexGradient != Infinity)
-// 			guardToVertexIntercept = guard.y - guardToVertexGradient * guard.x;
-	
-// 		for (var j = 0; j < numberOfLines; j++){
-// 			var polygonLineGradient = computeGradient(line.pointA, line.pointB);
-// 			if ( guardToVertexGradient != polygonLineGradient ){
-// 				// get intersection between two lines
-// 				if (polygonLineGradient != Infinity && guardToVertexGradient != Infinity){
-// 					polygonLineIntercept = line.pointA.y - polygonLineGradient * liine.pointA.x;
-// 					var xIntercept = (polygonLineIntercept - guardToVertexGradient) / (guardToVertexGradient - polygonLineGradient)
-// 					var yIntercept = (xIntercept * guard.x + guardToVertexintercept)
-// 				}
-// 				else{
-// 					if(polygonLineGradient == Infinity)
-// 						var xintercept = line.pointA.x
-// 					else var x intercept = guard.
-// 				}
-// 			}
-// 		}
-// 		// find intersections of line from guard to vertex & polygon (lines)
-
-// 	}
-
-// }
-
-
-var computeGradient = function(p, q){
-	if (p.x - q.x == 0){
-		return Infinity;
-	}
-	return (p.y - q.y)/(p.x - q.x);
-}
-
-var getLines = function (vertices){
-	var lines = [];
-	var numberOfVertices = vertices.length;
-	for (var i = 0; i < numberOfVertices; i++){
-		if ( i == numberOfVertices - 1 ){
-			lines.push(new Line(vertices[i], vertices[0]));
-			break;
-		}
-		lines.push(new Line(vertices[i], vertices[i+1]));
-	}
-	return lines;
-}
-
-var reachableVertices = function(vertices, lines, guard){
+var reachableVertices = function(vertices, polygon, guard){
 	var visibleVertices = [];
 	var numberOfVertices = vertices.length;
 	for (var i = 0; i < numberOfVertices; i++){
-		if (isVertexReachable(vertices[i], lines, guard)){ 
+		if (isVertexReachable(vertices[i], polygon, guard)){ 
 			
 			visibleVertices.push(vertices[i]);
 		}
 	}
+
+	console.log("Visible vertices ( " + visibleVertices.length + "): ");
+	console.log(JSON.stringify(visibleVertices));
 	return visibleVertices;
 }
 
-var isVertexReachable = function(vertex, lines, guard){
+var isVertexReachable = function(vertex, polygon, guard){
 	// vertex and guard are of type point
 	var lineGuardToVertex = new Line(vertex, guard);
+	var lines = polygon.lines;
 	var numberOfLines = lines.length;
-	for (var i = 0; i < numberOfLines; i++){
-		
-		if(lineGuardToVertex.pointA == lines[i].pointA || lineGuardToVertex.pointA == lines[i].pointB ||
-			lineGuardToVertex.pointB == lines[i].pointA || lineGuardToVertex.pointB == lines[i].pointB ){
+	if(!polygon.containsPoint(lineGuardToVertex.midpoint(), true))
+		return false; 
+
+	for (var i = 0; i < numberOfLines; i++) {
+		if(lines[i].containsPoint(guard))
+			// ignore lines that guard is on
 			continue;
+
+		if(lineGuardToVertex.containsPoint(lines[i].pointA)) {
+			var deltaX = guard.x - vertex.x;
+			var deltaY =  guard.y - vertex.y;
+			var pointImmediatelyAfter = new Point(lines[i].pointA.x + deltaX * epsilon, lines[i].pointA.y + deltaY * epsilon);
+			if(!polygon.containsPoint(pointImmediatelyAfter, true))
+				return false;	// ray went outside polygon
+			else
+				continue;
 		}
 
+		if(lineGuardToVertex.containsPoint(lines[i].pointB)) {
+			var deltaX = guard.x - vertex.x;
+			var deltaY =  guard.y - vertex.y;
+			var pointImmediatelyAfter = new Point(lines[i].pointB.x + deltaX * epsilon, lines[i].pointB.y + deltaY * epsilon);
+			if(!polygon.containsPoint(pointImmediatelyAfter, true))
+				return false;	// ray went outside polygon
+			else
+				continue;
+		}
 
-		if ( doIntersect(lines[i], lineGuardToVertex) ){
+		if ( doIntersect(lines[i], lineGuardToVertex) )
 			return false;
-		}
 	}
 	return true;
 }

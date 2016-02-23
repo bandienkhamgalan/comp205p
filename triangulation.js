@@ -1,4 +1,3 @@
-
 Line.prototype.toVector = function() {
 	return new Point(this.pointB.x - this.pointA.x, this.pointB.y - this.pointA.y);
 };
@@ -15,6 +14,10 @@ Line.prototype.sign = function(line) {
 						return 1;	// clockwise
 				};
 
+Line.prototype.midpoint = function() {
+	return new Point((this.pointA.x + this.pointB.x) * 0.5, (this.pointA.y + this.pointB.y) * 0.5);
+}
+
 Line.prototype.intersects = function(line) {
 	var p1 = this.pointA;
 	var q1 = this.pointB;
@@ -28,7 +31,7 @@ Line.prototype.intersects = function(line) {
 
        // General case
     if (o1 != o2 && o3 != o4)
-        return true;
+    	return true;
  
     // Special Cases
     // p1, q1 and p2 are colinear and p2 lies on segment p1q1
@@ -46,6 +49,29 @@ Line.prototype.intersects = function(line) {
     return false; 
 }
 
+Line.prototype.intersectsNotColinearNotVertex = function(line) {
+	var p1 = this.pointA;
+	var q1 = this.pointB;
+	var p2 = line.pointA;
+	var q2 = line.pointB;
+
+	var o1 = orientation(p1, q1, p2);
+    var o2 = orientation(p1, q1, q2);
+    var o3 = orientation(p2, q2, p1);
+    var o4 = orientation(p2, q2, q1);
+
+       // General case
+    if (o1 != o2 && o3 != o4) {
+    	// intersects but may be at vertex
+    	if(this.pointA.equals(line.pointA) || this.pointA.equals(line.pointB) ||
+			this.pointB.equals(line.pointA) || this.pointB.equals(line.pointB) )
+			return false;
+        else
+        	return true; 
+    }
+    return false;
+}
+
 Line.prototype.gradient = function() {
 	if(equals(this.pointA.x, this.pointB.x)) 
 		return Infinity;
@@ -53,6 +79,10 @@ Line.prototype.gradient = function() {
 		return 0; 
 	else
 		return (this.pointA.y - this.pointB.y) / (this.pointA.x - this.pointB.x);
+}
+
+Line.prototype.length = function() {
+	return Math.sqrt(Math.pow(this.pointB.x - this.pointA.x, 2) + Math.pow(this.pointB.y - this.pointA.y, 2));
 }
 
 Line.prototype.containsPoint = function(point) { 
