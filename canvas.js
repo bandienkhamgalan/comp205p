@@ -32,6 +32,7 @@ function drawEverything(pag) {
   drawPolygon(c, pag[mapId].polygon.vertices);
 
   // draw triangles
+  /* 
   var triangles = pag[mapId].polygon.findEars(); 
   for( var index = 0 ; index < triangles.length ; index++ )
   {
@@ -43,7 +44,7 @@ function drawEverything(pag) {
     c.closePath();
     c.lineWidth=0.001 * 150 / scaleFactor;
     c.stroke();
-  }
+  } */
 
   // draw visibility polygon
   var visibilityPolygons = fullVisibilityPolygon(pag[mapId].polygon, pag[mapId].guards);
