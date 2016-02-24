@@ -2318,9 +2318,9 @@ gpcas.geometry.PolyDefault.prototype.difference = function(p){
     */
 gpcas.geometry.PolyDefault.prototype.getArea = function() {
       var area= 0.0;
-      for( var i= 0; i < getNumInnerPoly() ; i++ )
+      for( var i= 0; i < this.getNumInnerPoly() ; i++ )
       {
-         var p= getInnerPoly(i);
+         var p = this.getInnerPoly(i);
          var tarea = p.getArea() * (p.isHole() ? -1.0: 1.0);
          area += tarea ;
       }

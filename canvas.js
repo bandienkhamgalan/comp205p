@@ -129,12 +129,43 @@ function drawEverything(pag) {
     if(visibilityPolygons.length > 0) {
       polygons = visibilityPolygons.map(vertices=>{return new Polygon(vertices)});
       var polygon = polygons.pop();
-      var toDraw = polygon.union(polygons, pag[mapId].polygon);
-      for( var index = 0 ; index < toDraw.polygons.length ; index++ )
-        drawPolygon(c, toDraw.polygons[index].vertices, "rgba(255, 255, 0, 0.25)");
+      var visibleAreas = polygon.union(polygons, pag[mapId].polygon);
+      for( var index = 0 ; index < visibleAreas.polygons.length ; index++ )
+        drawPolygon(c, visibleAreas.polygons[index].vertices, "rgba(255, 255, 0, 0.25)");
       
-      for( var index = 0 ; index < toDraw.holes.length ; index++ )
-        drawPolygon(c, toDraw.holes[index].vertices, "tomato");
+      for( var index = 0 ; index < visibleAreas.holes.length ; index++ )
+        drawPolygon(c, visibleAreas.holes[index].vertices, "tomato");
+
+      /* console.log("Computing area...");
+      console.log(visibleAreas.gpc.getArea() + " out of " + pag[mapId].polygon.gpcPolygon().getArea() + " visible" ); */
+
+      // draw nonVisibleAreas
+
+      var nonVisibleAreas = Polygon.gpcToComplexPolygons(pag[mapId].polygon.gpcPolygon().difference(visibleAreas.gpc), pag[mapId].polygon);
+      for( var index = 0 ; index < nonVisibleAreas.polygons.length ; index++ )
+        drawPolygon(c, nonVisibleAreas.polygons[index].vertices, "firebrick");
+
+      console.log("Checking if entire polygon is visible by guards...");
+      if( nonVisibleAreas.polygons.length > 0 ) {
+        // plot & log point in non visible area
+        var nonVisiblePoint;
+        var index = 0;
+        while(typeof nonVisiblePoint === 'undefined' && index < nonVisibleAreas.polygons.length)
+          nonVisiblePoint = nonVisibleAreas.polygons[index++].pointInPolygon();
+
+        if( typeof nonVisiblePoint === 'undefined' ) {
+        console.log("All areas visible. ");
+        }
+        else {
+          console.log(nonVisiblePoint);
+          c.fillStyle = 'lawngreen';
+          c.beginPath();
+          c.arc(nonVisiblePoint.x, nonVisiblePoint.y, 20 * unit, 0, 2 * Math.PI);
+          c.fill();
+        }
+      }
+      else
+        console.log("All areas visible. ");
     }
     drawGuardPoints(c, pag[mapId].guards);
   } else {

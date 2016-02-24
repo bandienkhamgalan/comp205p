@@ -207,6 +207,22 @@ Polygon.prototype.printGuardPositions = function() {
 		console.log("Guard at (" + guards[index].x + ", " + guards[index].y + ")");
 };
 
+Polygon.prototype.pointInPolygon = function() {
+	var toReturn;
+	for(var i = 0 ; i < this.lines.length ; i++) {
+		var midpoint = this.lines[i].midpoint();
+		for(var j = 0 ; j < this.vertices.length ; j++) {
+			var candidate = new Line(midpoint, this.vertices[j]).midpoint();
+			if(this.containsPoint(candidate, false)) {
+				toReturn = candidate;
+				break;
+			}
+		}
+	}
+
+	return toReturn;
+};
+
 // will not work if polygon has been changed
 Polygon.prototype.gpcPolygon = function(offsetPolygon) {
 	if(typeof offsetPolygon === 'undefined')
@@ -224,6 +240,9 @@ Polygon.prototype.gpcPolygon = function(offsetPolygon) {
 
 // Returns {polygons: [Polygon], holes: [Polygon]}
 Polygon.prototype.union = function(polygons, offsetPolygon) {
+	if(typeof offsetPolygon === 'undefined')
+		offsetPolygon = this;
+
 	var union = this.gpcPolygon(offsetPolygon);
 	for(var x = 0 ; x < polygons.length ; x++) {
 		union = union.union(polygons[x].gpcPolygon(offsetPolygon)); 
@@ -234,17 +253,19 @@ Polygon.prototype.union = function(polygons, offsetPolygon) {
 
 // Returns {polygons: [Polygon], holes: [Polygon]}
 Polygon.prototype.difference = function(polygons, offsetPolygon) {
+	if(typeof offsetPolygon === 'undefined')
+		offsetPolygon = this;
+
 	var difference = this.gpcPolygon(offsetPolygon);
-	for(var x = 0 ; x < polygons.length ; x++) {
+	for(var x = 0 ; x < polygons.length ; x++)
 		difference = difference.difference(polygons[x].gpcPolygon(offsetPolygon)); 
-	}
 
 	return Polygon.gpcToComplexPolygons(difference, offsetPolygon);
 }
 
 // Returns {polygons: [Polygon], holes: [Polygon]}
 Polygon.gpcToComplexPolygons = function(gpc, offsetPolygon) {
-	var complexPolygon = {polygons: [], holes: []};
+	var complexPolygon = {polygons: [], holes: [], gpc: gpc};
 	var innerPolygonCount = gpc.getNumInnerPoly();
 
 	for(var i = 0 ; i < innerPolygonCount ; i++) {
