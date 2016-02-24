@@ -71,17 +71,29 @@ function initCanvas() {
 
 function newFile(file) {
 	getPolygonAndGuards(file, function(pag) {
+		if(pag.length > 0 && pag[0].guards.length == 0 ) {
+			for(var index = 0 ; index < pag.length ; index++) {
+				pag[index].guards = pag[index].polygon.guardPositions();
+			}
+		}
+
 		pago = pag;
 		recompute();
 		redraw();
 	});
 }
 
+function guardAtEveryVertex() {
+	var mapId = parseInt(document.getElementById("mapId").value) - 1;
+	pago[mapId].guards = pago[mapId].polygon.vertices.slice();
+	visibilityPolygons = fullVisibilityPolygon(pago[mapId].polygon, pago[mapId].guards);
+	redraw();
+}
+
 function recompute() {
 	var mapId = parseInt(document.getElementById("mapId").value) - 1;
 	var polygon = pago[mapId].polygon;
 	var guards = pago[mapId].guards;
-	// triangles = polygon.findEars(); 
 	visibilityPolygons = fullVisibilityPolygon(polygon, guards);
 	var scaleFactorX = document.getElementById("myCanvas").width / (1.05 * polygon.rangeX);
 	var scaleFactorY = document.getElementById("myCanvas").height / (1.05 * polygon.rangeY);
@@ -92,10 +104,6 @@ function recompute() {
 }
 
 function redraw() {
-	drawEverything(pago);
-}
-
-function drawEverything(pag) {
 	var canvas = document.getElementById("myCanvas");
 	var c = canvas.getContext('2d');
 
@@ -104,45 +112,36 @@ function drawEverything(pag) {
 	c.clearRect(0,0, canvas.width, canvas.height);
 	scaleCanvas(c);
 
-	drawPolygon(c, pag[mapId].polygon.vertices);
+	console.log(pago[mapId].guards.length + " guards for polygon with " + pago[mapId].polygon.vertices.length + " vertices");
 
-	// draw triangles
-	/* 
-	var triangles = pag[mapId].polygon.findEars(); 
-	for( var index = 0 ; index < triangles.length ; index++ )
-	{
-		var ear = triangles[index];
-		c.beginPath();
-		c.moveTo(pag[mapId].polygon.vertices[ear[0]].x, pag[mapId].polygon.vertices[ear[0]].y);
-		c.lineTo(pag[mapId].polygon.vertices[ear[1]].x, pag[mapId].polygon.vertices[ear[1]].y);
-		c.lineTo(pag[mapId].polygon.vertices[ear[2]].x, pag[mapId].polygon.vertices[ear[2]].y);
-		c.closePath();
-		c.lineWidth = 0.25 * unit;
-		c.stroke();
-	}  */
+	drawPolygon(c, pago[mapId].polygon);
 
-	// draw visibility polygon
-	
+	drawVisibilityPolygon(c, pago[mapId].polygon, pago[mapId].guards);
+
+	// draw origin
+	c.fillStyle = 'yellow';
+	c.beginPath();
+	c.arc(0,0,6 * unit,0,2*Math.PI);
+	c.fill();
+}
+
+function drawVisibilityPolygon(c, polygon, guards) {
 	var guardId = document.getElementById("guardId").value;
 	if (guardId < 0) {
 		if(visibilityPolygons.length > 0) {
-			polygons = visibilityPolygons.map(vertices=>{return new Polygon(vertices)});
-			var polygon = polygons.pop();
-			var visibleAreas = polygon.union(polygons, pag[mapId].polygon);
+			polygons = visibilityPolygons.slice();
+			var visibleAreas = polygons.pop().union(polygons, polygon);
 			for( var index = 0 ; index < visibleAreas.polygons.length ; index++ )
-				drawPolygon(c, visibleAreas.polygons[index].vertices, "rgba(255, 255, 0, 0.25)");
+				drawPolygon(c, visibleAreas.polygons[index], "rgba(255, 255, 0, 0.25)");
 			
 			for( var index = 0 ; index < visibleAreas.holes.length ; index++ )
-				drawPolygon(c, visibleAreas.holes[index].vertices, "tomato");
-
-			/* console.log("Computing area...");
-			console.log(visibleAreas.gpc.getArea() + " out of " + pag[mapId].polygon.gpcPolygon().getArea() + " visible" ); */
+				drawPolygon(c, visibleAreas.holes[index], "tomato");
 
 			// draw nonVisibleAreas
 
-			var nonVisibleAreas = Polygon.gpcToComplexPolygons(pag[mapId].polygon.gpcPolygon().difference(visibleAreas.gpc), pag[mapId].polygon);
+			var nonVisibleAreas = Polygon.gpcToComplexPolygons(polygon.gpcPolygon().difference(visibleAreas.gpc), polygon);
 			for( var index = 0 ; index < nonVisibleAreas.polygons.length ; index++ )
-				drawPolygon(c, nonVisibleAreas.polygons[index].vertices, "firebrick");
+				drawPolygon(c, nonVisibleAreas.polygons[index], "firebrick");
 
 			console.log("Checking if entire polygon is visible by guards...");
 			if( nonVisibleAreas.polygons.length > 0 ) {
@@ -156,6 +155,7 @@ function drawEverything(pag) {
 					console.log("All areas visible. ");
 				}
 				else {
+					console.log("Not all areas visible. Non-visible point: " + nonVisiblePoint)
 					console.log(nonVisiblePoint);
 					c.fillStyle = 'lawngreen';
 					c.beginPath();
@@ -166,20 +166,11 @@ function drawEverything(pag) {
 			else
 				console.log("All areas visible. ");
 		}
-		drawGuardPoints(c, pag[mapId].guards);
-	} else {
+		drawGuardPoints(c, guards);
+	} else if(guardId < guards.length) {
 		drawPolygon(c, visibilityPolygons[guardId], "rgba(255, 255, 0, 0.25)");
-		drawGuardPoints(c, [pag[mapId].guards[guardId]]);
+		drawGuardPoints(c, [guards[guardId]]);
 	} 
-
-	// pag[mapId].polygon.printGuardPositions();
-	// drawColoredVertices(c, pag[mapId].polygon);
-
-	// draw origin
-	c.fillStyle = 'yellow';
-	c.beginPath();
-	c.arc(0,0,6 * unit,0,2*Math.PI);
-	c.fill();
 }
 
 function scaleCanvas(c) {
@@ -187,7 +178,8 @@ function scaleCanvas(c) {
 	c.translate(panX, panY);
 }
 
-function drawPolygon(c, points) {
+function drawPolygon(c, polygon) {
+	var points = polygon.vertices;
 	c.fillStyle = arguments.length == 3 ? arguments[2] : 'white';
 	c.beginPath();
 	c.moveTo(points[0].x, points[0].y);
@@ -214,9 +206,18 @@ function drawGuardPoints(c, points) {
 	c.fillStyle = 'black';
 	for(var i = 0; i < points.length; i++) {
 		c.beginPath();
-		c.arc(points[i].x,points[i].y, 10 * unit, 0,2 * Math.PI);
+		c.arc(points[i].x,points[i].y, 20 * unit, 0,2 * Math.PI);
 		c.fill();
 	}
+}
+
+function computeGuards() {
+	var mapId = parseInt(document.getElementById("mapId").value) - 1;
+	pago[mapId].guards = pago[mapId].polygon.guardPositions();
+	console.log(pago[mapId].guards.length + " guards found");
+	document.getElementById("guardId").value = -1;
+	recompute();
+	redraw();
 }
 
 function findRefutationPoints() {
@@ -229,7 +230,7 @@ function findRefutationPoints() {
 
 		var nonVisibleAreas = Polygon.gpcToComplexPolygons(polygon.gpcPolygon().difference(visibleAreas.gpc), polygon);
 
-		if( nonVisibleAreas.polygons.length > 0 ) {
+		if(nonVisibleAreas.polygons.length > 0) {
 			// plot & log point in non visible area
 			var nonVisiblePoint = undefined;
 			var j = 0;
@@ -245,4 +246,10 @@ function findRefutationPoints() {
 	console.log(output);
 	var download = "data:application/octet-stream;filename=output.txt," + encodeURIComponent(output);
 	var newWindow = window.open(download, 'output.txt');
+}
+
+function removeRedundantGuardsClicked() {
+	var mapId = parseInt(document.getElementById("mapId").value) - 1; 
+	removeRedundantGuards(pago[mapId].polygon, pago[mapId].guards, visibilityPolygons);
+	redraw();
 }

@@ -117,96 +117,6 @@ Polygon.prototype.intersectionsWithLine = function(line, sorted) {
 	return toReturn;
 }
 
-// Return [[Point]]
-Polygon.prototype.findEars = function() {
-	var ears = [];
-	var index = 0;
-	var currentNode = DoublyLinkedCycle.fromArray(this.vertices);
-	vertices = this.vertices.length;
-	while(vertices >= 3) {
-		var currentVertex = currentNode.value;
-		var previousVertex = currentNode.previous.value;
-		var nextVertex = currentNode.next.value;
-
-		if(turnDirection(previousVertex, currentVertex, nextVertex) == left)
-		{
-			// convex vertex (ear candidate)
-			var potentialEar = new Polygon([previousVertex, currentVertex, nextVertex]);
-			var containsVertices = false;
-
-			// check if "ear" contains other vertices in linked list
-			var node = currentNode.next.next;
-			while( node != currentNode.previous )
-			{
-				var vertex = node.value;
-				if( vertex != currentVertex && vertex != previousVertex && vertex != nextVertex ) {
-					if( potentialEar.containsPoint(vertex, true) ) {
-						containsVertices = true;
-						break;
-					}
-				}
-				node = node.next;
-			}
- 
-			if(!containsVertices) {
-				ears.push([this.vertices.indexOf(previousVertex), this.vertices.indexOf(currentVertex), this.vertices.indexOf(nextVertex)]);
-				var previousNode = currentNode.previous;
-				var nextNode = currentNode.next;
-				currentNode.delete();
-				currentNode = currentNode.next;
-				vertices--;
-			}
-		}
-		currentNode = currentNode.next;
-	}
-	return ears;
-}
-
-Polygon.prototype.colorVertices = function() {
-	if(this.vertices.length >= 3) {
-		var ears = this.findEars();
-		this.vertices[ears[ears.length - 1][0]].color = "r";
-		this.vertices[ears[ears.length - 1][1]].color = "g";
-		this.vertices[ears[ears.length - 1][2]].color = "b";
-		for( var i = ears.length - 2 ; i >= 0 ; i-- ) {
-			var unseenColors = "rgb";
-			var vertexToAddColor ;
-			for( var j = 0 ; j < 3 ; j++ ) {
-				var currentColor =  this.vertices[ears[i][j]].color;
-				if( typeof currentColor === 'undefined')
-					vertexToAddColor = this.vertices[ears[i][j]];
-				else
-					unseenColors = unseenColors.replace(currentColor, "");
-			}
-
-			if(vertexToAddColor instanceof Point)
-				vertexToAddColor.color = unseenColors;
-		}
-	}
-}
-
-Polygon.prototype.guardPositions = function() {
-	this.colorVertices();
-
-	var redVertices = this.vertices.filter(vertex => { return vertex.color == "r" });
-	var greenVertices = this.vertices.filter(vertex => { return vertex.color == "g" });
-	var blueVertices = this.vertices.filter(vertex => { return vertex.color == "b" });
-
-	if(redVertices.length <= greenVertices.length && redVertices.length <= blueVertices.length)
-		return redVertices;
-	else if(greenVertices.length <= redVertices.length && greenVertices.length <= blueVertices.length)
-		return greenVertices;
-	else
-		return blueVertices;
-};
-
-Polygon.prototype.printGuardPositions = function() {
-	var guards = this.guardPositions();
-	console.log("Guards are at " + guards[0].color);
-	for(var index = 0 ; index < guards.length ; index++ )
-		console.log("Guard at (" + guards[index].x + ", " + guards[index].y + ")");
-};
-
 Polygon.prototype.pointInPolygon = function() {
 	var toReturn;
 	for(var i = 0 ; i < this.lines.length ; i++) {
@@ -223,7 +133,6 @@ Polygon.prototype.pointInPolygon = function() {
 	return toReturn;
 };
 
-// will not work if polygon has been changed
 Polygon.prototype.gpcPolygon = function(offsetPolygon) {
 	if(typeof offsetPolygon === 'undefined')
 		offsetPolygon = this;
@@ -236,6 +145,10 @@ Polygon.prototype.gpcPolygon = function(offsetPolygon) {
 		this.GPC.addPoint(point);
 	}
 	return this.GPC;
+}
+
+Polygon.prototype.area = function() {
+	return this.gpcPolygon().getArea();
 }
 
 // Returns {polygons: [Polygon], holes: [Polygon]}

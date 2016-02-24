@@ -10,7 +10,7 @@ var fullVisibilityPolygon = function(polygon, guards) {
 		//console.log("reachable: ")
 		//console.log(reachableVert)
 		var extendedVertices = extendVisibleVertices(polygon, reachableVert, guards[i]);
-		visibilityPolygons.push(visibleVerticesInOrder(polygon, extendedVertices));
+		visibilityPolygons.push(new Polygon(visibleVerticesInOrder(polygon, extendedVertices)));
 	}
 
 	return visibilityPolygons;
