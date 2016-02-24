@@ -10,13 +10,29 @@
   body {
     margin: 5px;
     background-color: slategrey;
+    font-family:Arial, Helvetica, Verdana;
+    font-size:0.8em;
+  }
+  input[type="file"] {
+  	width:180px;
+  }
+  input[type="number"] {
+  	width:40px;
+  }
+  #myCanvas {
+  	cursor: crosshair;
   }
 </style>
 <body>
-<canvas id="myCanvas" onload="init()">Sorry, update your browser</canvas>
+<canvas id="myCanvas">Sorry, update your browser</canvas>
 <script> initCanvas(); </script>
+<div style="margin-top:5px;">
 <input type="file" name="inputFile" id="inputFile" onchange="newFile(this.files[0])"></input>
-<input type="number" id="mapId" onchange="newMap()" value="1" step="1"></input>
-<input type="number" id="guardId" onchange="newMap()" value="1" step="1"></input>
+Polygon ID
+<input type="number" id="mapId" onchange="recompute();redraw()" value="1" step="1"></input>
+Guard ID
+<input type="number" id="guardId" onchange="redraw()" value="1" step="1"></input>
+<span id="mouseCoordinates"></span>
+</div>
 </body>
 </html>
