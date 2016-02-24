@@ -148,12 +148,10 @@ function removeRedundantGuards(polygon, guards, visibilityPolygons) {
 		
 		// check if union of remaining guards is whole polygon
 		console.log("Unioning remaining visible polygons and checking");
-		var visibleAreas = visibilityPolygons.slice(0, 1)[0].union(visibilityPolygons.slice(1), polygon);
-		var nonVisibleAreas = Polygon.gpcToComplexPolygons(polygon.gpcPolygon().difference(visibleAreas.gpc), polygon);
-
+		var nonVisibleAreas = polygon.nonVisibleAreas(visibilityPolygons);
 		var containsNonVisibleAreas = false;
 		if(nonVisibleAreas.polygons.length > 0) {
-			for(var index = 0 ; index < nonVisibleAreas.length ; index++) {
+			for(var index = 0 ; index < nonVisibleAreas.polygons.length ; index++) {
 				if( nonVisibleAreas.polygons[index].pointInPolygon() instanceof Point ) {
 					containsNonVisibleAreas = true;
 					break;

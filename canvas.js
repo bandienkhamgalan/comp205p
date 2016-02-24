@@ -116,7 +116,9 @@ function redraw() {
 
 	drawPolygon(c, pago[mapId].polygon);
 
-	drawVisibilityPolygon(c, pago[mapId].polygon, pago[mapId].guards);
+	drawVisibilityPolygons(c, pago[mapId].polygon, pago[mapId].guards);
+
+	drawInvisibleAreas(c, pago[mapId].polygon);
 
 	// draw origin
 	c.fillStyle = 'yellow';
@@ -125,52 +127,46 @@ function redraw() {
 	c.fill();
 }
 
-function drawVisibilityPolygon(c, polygon, guards) {
+function drawVisibilityPolygons(c, polygon, guards) {
 	var guardId = document.getElementById("guardId").value;
 	if (guardId < 0) {
-		if(visibilityPolygons.length > 0) {
-			polygons = visibilityPolygons.slice();
-			var visibleAreas = polygons.pop().union(polygons, polygon);
-			for( var index = 0 ; index < visibleAreas.polygons.length ; index++ )
-				drawPolygon(c, visibleAreas.polygons[index], "rgba(255, 255, 0, 0.25)");
-			
-			for( var index = 0 ; index < visibleAreas.holes.length ; index++ )
-				drawPolygon(c, visibleAreas.holes[index], "tomato");
-
-			// draw nonVisibleAreas
-
-			var nonVisibleAreas = Polygon.gpcToComplexPolygons(polygon.gpcPolygon().difference(visibleAreas.gpc), polygon);
-			for( var index = 0 ; index < nonVisibleAreas.polygons.length ; index++ )
-				drawPolygon(c, nonVisibleAreas.polygons[index], "firebrick");
-
-			console.log("Checking if entire polygon is visible by guards...");
-			if( nonVisibleAreas.polygons.length > 0 ) {
-				// plot & log point in non visible area
-				var nonVisiblePoint;
-				var index = 0;
-				while(typeof nonVisiblePoint === 'undefined' && index < nonVisibleAreas.polygons.length)
-					nonVisiblePoint = nonVisibleAreas.polygons[index++].pointInPolygon();
-
-				if( typeof nonVisiblePoint === 'undefined' ) {
-					console.log("All areas visible. ");
-				}
-				else {
-					console.log("Not all areas visible. Non-visible point: " + nonVisiblePoint)
-					console.log(nonVisiblePoint);
-					c.fillStyle = 'lawngreen';
-					c.beginPath();
-					c.arc(nonVisiblePoint.x, nonVisiblePoint.y, 20 * unit, 0, 2 * Math.PI);
-					c.fill();
-				}
-			}
-			else
-				console.log("All areas visible. ");
-		}
+		for( var index = 0 ; index < visibilityPolygons.length ; index++ ) 
+			drawPolygon(c, visibilityPolygons[index], "rgba(255, 255, 0, 0.25)");
 		drawGuardPoints(c, guards);
 	} else if(guardId < guards.length) {
 		drawPolygon(c, visibilityPolygons[guardId], "rgba(255, 255, 0, 0.25)");
 		drawGuardPoints(c, [guards[guardId]]);
 	} 
+};
+
+function drawInvisibleAreas(c, polygon) {
+	// draw nonVisibleAreas
+	var nonVisibleAreas = polygon.nonVisibleAreas(visibilityPolygons);
+	for( var index = 0 ; index < nonVisibleAreas.polygons.length ; index++ )
+		drawPolygon(c, nonVisibleAreas.polygons[index], "firebrick");
+
+	console.log("Checking if entire polygon is visible by guards...");
+	if( nonVisibleAreas.polygons.length > 0 ) {
+		// plot & log point in non visible area
+		var nonVisiblePoint;
+		var index = 0;
+		while(typeof nonVisiblePoint === 'undefined' && index < nonVisibleAreas.polygons.length)
+			nonVisiblePoint = nonVisibleAreas.polygons[index++].pointInPolygon();
+
+		if( typeof nonVisiblePoint === 'undefined' ) {
+			console.log("All areas visible. ");
+		}
+		else {
+			console.log("Not all areas visible. Non-visible point: " + nonVisiblePoint)
+			console.log(nonVisiblePoint);
+			c.fillStyle = 'lawngreen';
+			c.beginPath();
+			c.arc(nonVisiblePoint.x, nonVisiblePoint.y, 20 * unit, 0, 2 * Math.PI);
+			c.fill();
+		}
+	}
+	else
+		console.log("All areas visible. ");
 }
 
 function scaleCanvas(c) {
@@ -225,10 +221,8 @@ function findRefutationPoints() {
 	for(var i = 0 ; i < pago.length ; i++) {
 		var polygon = pago[i].polygon;
 		var guards = pago[i].guards;
-		polygons = fullVisibilityPolygon(polygon, guards).map(vertices=>{return new Polygon(vertices)});
-		var visibleAreas = polygons.pop().union(polygons, polygon);
-
-		var nonVisibleAreas = Polygon.gpcToComplexPolygons(polygon.gpcPolygon().difference(visibleAreas.gpc), polygon);
+		currentVisibilityPolygons = fullVisibilityPolygon(polygon, guards);
+		var nonVisibleAreas = polygon.nonVisibleAreas(currentVisibilityPolygons);
 
 		if(nonVisibleAreas.polygons.length > 0) {
 			// plot & log point in non visible area

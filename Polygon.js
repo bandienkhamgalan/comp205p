@@ -197,3 +197,12 @@ Polygon.gpcToComplexPolygons = function(gpc, offsetPolygon) {
 
 	return complexPolygon;
 }
+
+// Returns {polygons: [Polygon], holes: [Polygon]}
+Polygon.prototype.nonVisibleAreas = function(visibilityPolygons) {
+	var difference = this.gpcPolygon(this);
+	for(var index = 0 ; index < visibilityPolygons.length ; index++ ) 
+		difference = difference.difference(visibilityPolygons[index].gpcPolygon(this));
+
+	return Polygon.gpcToComplexPolygons(difference, this);
+} 
