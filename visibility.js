@@ -69,7 +69,7 @@ var extendVisibleVertices = function(polygon, reachableVertices, guard){
 
 		var intersectionPoints = polygon.intersectionsWithLine(lineFromVertexToBoundary, true);
 
-		console.log(intersectionPoints + " for vertex " + reachableVertices[i]);
+		// console.log(intersectionPoints + " for vertex " + reachableVertices[i]);
 
 		var closestPoint = null;
 		var previousPoint = guard;
@@ -86,18 +86,20 @@ var extendVisibleVertices = function(polygon, reachableVertices, guard){
 			previousPoint = candidate;
 		}
 
-		console.log(closestPoint + " is closest intersection for vertex " + reachableVertices[i]);
+		// console.log(closestPoint + " is closest intersection for vertex " + reachableVertices[i]);
 
 		if(closestPoint != null) {
-			visiblePolygon.push(reachableVertices[i]);
-			if(visiblePolygon.indexOf(closestPoint) < 0)
+			if(visiblePolygon.filter(x => { return x.equals(reachableVertices[i]) }).length == 0)
+				visiblePolygon.push(reachableVertices[i]);
+			if(visiblePolygon.filter(x => { return x.equals(closestPoint) }).length == 0)
 				visiblePolygon.push(closestPoint);
 		}
 		else {
-			visiblePolygon.push(reachableVertices[i]);
+			if(visiblePolygon.filter(x => { return x.equals(reachableVertices[i]) }).length == 0)
+				visiblePolygon.push(reachableVertices[i]);
 		}
 	}
-	// console.log(JSON.stringify(visiblePolygon));
+	//console.log(JSON.stringify(visiblePolygon));
 	return visiblePolygon;
 }
 
@@ -105,14 +107,13 @@ var reachableVertices = function(vertices, polygon, guard){
 	var visibleVertices = [];
 	var numberOfVertices = vertices.length;
 	for (var i = 0; i < numberOfVertices; i++){
-		if (isVertexReachable(vertices[i], polygon, guard)){ 
-			
+		if (isVertexReachable(vertices[i], polygon, guard)) { 
 			visibleVertices.push(vertices[i]);
 		}
 	}
 
-	console.log("Visible vertices ( " + visibleVertices.length + "): ");
-	console.log(JSON.stringify(visibleVertices));
+	// console.log("Visible vertices ( " + visibleVertices.length + "): ");
+	// console.log(JSON.stringify(visibleVertices));
 	return visibleVertices;
 }
 

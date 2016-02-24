@@ -126,9 +126,17 @@ function drawEverything(pag) {
   
   var guardId = document.getElementById("guardId").value;
   if (guardId < 0) {
-    for( var index = 0 ; index < visibilityPolygons.length ; index++)
-      drawPolygon(c, visibilityPolygons[index], ["rgba(255, 255, 0, 0.25)", "rgba(0, 255, 255, 0.25)"][index % 2]);
-      drawGuardPoints(c, pag[mapId].guards);
+    if(visibilityPolygons.length > 0) {
+      polygons = visibilityPolygons.map(vertices=>{return new Polygon(vertices)});
+      var polygon = polygons.pop();
+      var toDraw = polygon.union(polygons, pag[mapId].polygon);
+      for( var index = 0 ; index < toDraw.polygons.length ; index++ )
+        drawPolygon(c, toDraw.polygons[index].vertices, "rgba(255, 255, 0, 0.25)");
+      
+      for( var index = 0 ; index < toDraw.holes.length ; index++ )
+        drawPolygon(c, toDraw.holes[index].vertices, "tomato");
+    }
+    drawGuardPoints(c, pag[mapId].guards);
   } else {
     drawPolygon(c, visibilityPolygons[guardId], "rgba(255, 255, 0, 0.25)");
     drawGuardPoints(c, [pag[mapId].guards[guardId]]);

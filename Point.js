@@ -13,3 +13,7 @@ Point.prototype.equals = function(point) {
 	else
 		return
 };
+
+Point.prototype.toList = function() {
+	return [this.x, this.y];
+}

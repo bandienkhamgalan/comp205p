@@ -1,3 +1,26 @@
+var PolyDefault = gpcas.geometry.PolyDefault ;
+var ArrayList = gpcas.util.ArrayList;
+var PolySimple = gpcas.geometry.PolySimple;
+var Clip = gpcas.geometry.Clip;
+var OperationType = gpcas.geometry.OperationType;
+var LmtTable = gpcas.geometry.LmtTable;
+var ScanBeamTreeEntries = gpcas.geometry.ScanBeamTreeEntries;
+var EdgeTable = gpcas.geometry.EdgeTable;
+var EdgeNode = gpcas.geometry.EdgeNode;
+var ScanBeamTree = gpcas.geometry.ScanBeamTree;
+var Rectangle = gpcas.geometry.Rectangle;
+var BundleState = gpcas.geometry.BundleState;
+var LmtNode = gpcas.geometry.LmtNode;
+var TopPolygonNode = gpcas.geometry.TopPolygonNode;
+var AetTree = gpcas.geometry.AetTree;
+var HState = gpcas.geometry.HState;
+var VertexType = gpcas.geometry.VertexType;
+var VertexNode = gpcas.geometry.VertexNode;
+var PolygonNode = gpcas.geometry.PolygonNode;
+var ItNodeTable = gpcas.geometry.ItNodeTable;
+var StNode = gpcas.geometry.StNode;
+var ItNode = gpcas.geometry.ItNode;
+
 var Polygon = function(vertices) {
 	this.vertices = vertices;
 
@@ -8,7 +31,6 @@ var Polygon = function(vertices) {
 		allX.push(vertices[i].x);
 		allY.push(vertices[i].y);
 	}
-
 	this.minX = Math.min(...allX);
 	this.minY = Math.min(...allY);
 	this.maxX = Math.max(...allX);
@@ -184,3 +206,60 @@ Polygon.prototype.printGuardPositions = function() {
 	for(var index = 0 ; index < guards.length ; index++ )
 		console.log("Guard at (" + guards[index].x + ", " + guards[index].y + ")");
 };
+
+// will not work if polygon has been changed
+Polygon.prototype.gpcPolygon = function(offsetPolygon) {
+	if(typeof offsetPolygon === 'undefined')
+		offsetPolygon = this;
+
+	this.GPC = new PolyDefault();
+	for( var index = 0 ; index < this.vertices.length ; index++ ) {
+		var point = new Point(this.vertices[index].x, this.vertices[index].y);
+		point.x -= (offsetPolygon.minX - 1);
+		point.y -= (offsetPolygon.minY - 1);
+		this.GPC.addPoint(point);
+	}
+	return this.GPC;
+}
+
+// Returns {polygons: [Polygon], holes: [Polygon]}
+Polygon.prototype.union = function(polygons, offsetPolygon) {
+	var union = this.gpcPolygon(offsetPolygon);
+	for(var x = 0 ; x < polygons.length ; x++) {
+		union = union.union(polygons[x].gpcPolygon(offsetPolygon)); 
+	}
+
+	return Polygon.gpcToComplexPolygons(union, offsetPolygon);
+}
+
+// Returns {polygons: [Polygon], holes: [Polygon]}
+Polygon.prototype.difference = function(polygons, offsetPolygon) {
+	var difference = this.gpcPolygon(offsetPolygon);
+	for(var x = 0 ; x < polygons.length ; x++) {
+		difference = difference.difference(polygons[x].gpcPolygon(offsetPolygon)); 
+	}
+
+	return Polygon.gpcToComplexPolygons(difference, offsetPolygon);
+}
+
+// Returns {polygons: [Polygon], holes: [Polygon]}
+Polygon.gpcToComplexPolygons = function(gpc, offsetPolygon) {
+	var complexPolygon = {polygons: [], holes: []};
+	var innerPolygonCount = gpc.getNumInnerPoly();
+
+	for(var i = 0 ; i < innerPolygonCount ; i++) {
+		var currentGPC = gpc.getInnerPoly(i);
+
+		var convertedVertices = [];
+		var vertexCount = currentGPC.getNumPoints();
+		for(var j = 0 ; j < vertexCount ; j++)
+			convertedVertices.push(new Point(currentGPC.getX(j) + (offsetPolygon.minX - 1), currentGPC.getY(j) + (offsetPolygon.minY - 1)));
+
+		if(currentGPC.isHole())
+			complexPolygon.holes.push(new Polygon(convertedVertices));
+		else
+			complexPolygon.polygons.push(new Polygon(convertedVertices));
+	}
+
+	return complexPolygon;
+}
