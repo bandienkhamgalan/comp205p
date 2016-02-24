@@ -4,7 +4,7 @@ var Point = function(x, y) {
 };
 
 Point.prototype.toString = function() {
-	return "(" + this.x + ", " + this.y + ")";
+	return "(" + this.x.toFixed(10) + ", " + this.y.toFixed(10) + ")";
 };
 
 Point.prototype.equals = function(point) {
