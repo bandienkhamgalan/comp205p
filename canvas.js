@@ -264,7 +264,7 @@ function addVertexGuards() {
 
 function addRayGuards() {
 	var mapId = parseInt(document.getElementById("mapId").value) - 1;
-	pago[mapId].guards.push(...pago[mapId].polygon.visibilityExtensions("boundary"));
+	pago[mapId].guards.push(...pago[mapId].polygon.visibilityExtensions("intersections"));
 	visibilityPolygons = fullVisibilityPolygon(pago[mapId].polygon, pago[mapId].guards);
 	removeDuplicates(pago[mapId].guards, visibilityPolygons);
 	redraw();

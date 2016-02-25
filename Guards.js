@@ -157,6 +157,7 @@ function removeRedundantGuards(polygon, guards, visibilityPolygons, mode) {
 // specify at "boundary" or "midpoint" as parameter
 Polygon.prototype.visibilityExtensions = function(mode) {
 	var candidates = [];
+	var rays = [];
 
 	for(var i = 0 ; i < this.vertices.length ; i++) {
 		for(var j = 0 ; j < this.vertices.length ; j++ ) {
@@ -193,6 +194,9 @@ Polygon.prototype.visibilityExtensions = function(mode) {
 							var midpoint = new Line(this.vertices[j], current).midpoint();
 							if( candidates.filter(a => { return a.equals(midpoint)}).length == 0 )
 								candidates.push(midpoint);
+						} else if (mode == "intersections") {
+							rays.push(new Line(this.vertices[j], current));
+							rays.push(new Line(this.vertices[i], this.vertices[j]));
 						}
 						break;
 					}				
@@ -201,7 +205,24 @@ Polygon.prototype.visibilityExtensions = function(mode) {
 				}
 			}
 		}
-	} 
+	}
+
+	if (mode == "intersections") {
+
+		console.log("rays has length: " + rays.length);
+
+		for (var ray1 = 0; ray1 < rays.length; ray1++) {
+			for (var ray2 = 0; ray2 < rays.length; ray2++) {
+
+				var raysIntersection = rays[ray1].intersectionPoint(rays[ray2]);
+
+				if( raysIntersection != null && candidates.filter(a => { return a.equals(raysIntersection)}).length == 0 )
+					candidates.push(raysIntersection);
+
+			}
+		}
+
+	}
 
 	return candidates;
 }
