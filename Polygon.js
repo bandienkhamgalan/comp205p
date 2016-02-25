@@ -52,6 +52,10 @@ var Polygon = function(vertices) {
 Polygon.prototype.containsPoint = function(point, boundariesIncluded) {
 	var intersections = 0;
 	var line = new Line(new Point(this.minX - 1, point.y), point);
+
+	if(lessThan(point.x, this.minX) || greaterThan(point.x, this.maxX) || lessThan(point.y, this.minY) || greaterThan(point.y, this.maxY) )
+		return false;
+
 	for(var index = 0 ; index < this.lines.length ; index++) {
 		var side = this.lines[index];
 		if( side.containsPoint(point) )
@@ -210,7 +214,7 @@ Polygon.prototype.allAreasVisible = function(visibilityPolygons, unionedGPC) {
 		var searchVertex = this.vertices[i];
 		var vertexFound = false;
 		for(var j = 0 ; j < visibilityPolygons.length ; j++ ) {
-			if(visibilityPolygons[j].vertices.filter(vertex => {return vertex.equals(searchVertex)}).length > 0) {
+			if(visibilityPolygons[j].containsPoint(searchVertex, true)) {
 				vertexFound = true;
 				break;
 			}

@@ -208,69 +208,76 @@ Polygon.prototype.visibilityExtensions = function(mode) {
 // specify at "area" or "vertex" as last parameter (scoring)
 var greedilySelectGuards = function(polygon, guardCandidates, visibilityPolygons, scoring) {
 	var toReturn = {guards: [], visibilityPolygons: []};
-	var union = new PolyDefault();
-	var completeVisibility = false;
 	var gpcPolygon = polygon.gpcPolygon();
-	while(!completeVisibility) {
-		// add solution which adds most area
-		var maxAddedArea = 0;
-		var maxAddedGuardIndex;
-		var maxAddedUnion;
-		for(var index = 0 ; index < guardCandidates.length ; index++) {
-			var addedPolygon = union.union(visibilityPolygons[index].gpcPolygon(polygon));
-			var area = addedPolygon.getArea();
-			if(area > maxAddedArea) {
-				maxAddedArea = area;
-				maxAddedGuardIndex = index;
-				maxAddedUnion = addedPolygon;
-			}
-			else if(equals(area, 0)) {
-				guardCandidates.splice(index, 1);
-				visibiiltyPolygons.splice(index, 1);
-				index--;
-			}
-		}
-
-		if(equals(maxAddedArea, 0))
-			break;
-
-		console.log("Choosing " + guardCandidates[maxAddedGuardIndex] + " which adds " + (maxAddedArea - union.getArea()));
-
-		union = maxAddedUnion;
-		toReturn.guards.push(guardCandidates.splice(maxAddedGuardIndex, 1)[0]);
-		toReturn.visibilityPolygons.push(visibilityPolygons.splice(maxAddedGuardIndex, 1)[0]);
-
-		// check current solution
-		var allVerticesFound = true;
-		for(var i = 0 ; i < polygon.vertices.length ; i++ ) {
-			var searchVertex = polygon.vertices[i];
-			var vertexFound = false;
-			for(var j = 0 ; j < toReturn.visibilityPolygons.length ; j++ ) {
-				if(toReturn.visibilityPolygons[j].vertices.filter(vertex => {return vertex.equals(searchVertex)}).length > 0) {
-					vertexFound = true;
-					break;
+	
+	var union = new PolyDefault();
+	var guardsVisible = [];
+	for(var index = 0 ; index < guardCandidates.length ; index++)
+		guardsVisible.push(false);
+	
+	var length = guardCandidates.length;
+	for(var a = 0 ; a < length ; a++) {
+		var maxScore = -1;
+		var maxScoreIndex = -1;
+		if(scoring == "area") {			
+			// add guard which adds most area
+			var maxAddedUnion;
+			for(var index = 0 ; index < guardCandidates.length ; index++) {
+				var addedPolygon = union.union(visibilityPolygons[index].gpcPolygon(polygon));
+				var area = addedPolygon.getArea();
+				if(area > maxScore) {
+					maxScore = area;
+					maxScoreIndex = index;
+					maxAddedUnion = addedPolygon;
 				}
 			}
 
-			if(!vertexFound) {
-				allVerticesFound = false;
+			if(lessThanOrEqualTo(maxScore, 0))
 				break;
-			}	
-		}
 
-		if(!allVerticesFound)
-			continue;
+			union = maxAddedUnion;
+			console.log("Choosing " + guardCandidates[maxScoreIndex] + " which adds " + (maxScore - union.getArea()));
 
-		completeVisibility = true;
-		var nonVisibleAreas = Polygon.gpcToComplexPolygons(gpcPolygon.difference(union), polygon);
-		if(nonVisibleAreas.polygons.length > 0) {
-			for(var index = 0 ; index < nonVisibleAreas.polygons.length ; index++) {
-				if( nonVisibleAreas.polygons[index].pointInPolygon() instanceof Point ) {
-					completeVisibility = false;
-					break;
+
+		} else if (scoring == "guards") {
+			// add guard which reveals most guards
+			var maxSolution;
+			for(var i = 0 ; i < guardCandidates.length ; i++) {
+				var currentScore = 0;
+				var newSolution = guardsVisible.slice();
+				for(var j = 0 ; j < guardCandidates.length ; j++)
+				{
+					if(visibilityPolygons[i].containsPoint(guardCandidates[j], true))
+					{
+						if(guardsVisible[j] == false)
+							currentScore++;
+						newSolution[j] = true;
+					}
+				}
+
+				if(currentScore > maxScore) {
+					maxScore = currentScore;
+					maxScoreIndex = i;
+					maxSolution = newSolution;
 				}
 			}
+
+			console.log(visibilityPolygons.length + "[" + maxScoreIndex + "]");
+			console.log("Choosing " + guardCandidates[maxScoreIndex] + " which makes " + maxScore + " more vertices visible. ");
+
+			if(maxScoreIndex >= 0) {
+				guardsVisible = maxSolution;
+				union = union.union(visibilityPolygons[maxScoreIndex].gpcPolygon(polygon));	
+			}
 		}
+
+		if(maxScoreIndex >= 0) {
+			toReturn.guards.push(guardCandidates.splice(maxScoreIndex, 1)[0]);
+			toReturn.visibilityPolygons.push(visibilityPolygons.splice(maxScoreIndex, 1)[0]);
+		}
+		
+		if(polygon.allAreasVisible(toReturn.visibilityPolygons, union))
+			break;
 	}
 
 	return toReturn;

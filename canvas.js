@@ -125,10 +125,10 @@ function drawVisibilityPolygons(c, polygon, guards) {
 	var guardId = document.getElementById("guardId").value;
 	if (guardId < 0) {
 		for( var index = 0 ; index < visibilityPolygons.length ; index++ ) 
-			drawPolygon(c, visibilityPolygons[index], "rgba(255, 255, 0, 0.25)");
+			drawPolygon(c, visibilityPolygons[index], "rgba(0, 0, 255, 0.25)");
 		drawGuardPoints(c, guards);
 	} else if(guardId < guards.length) {
-		drawPolygon(c, visibilityPolygons[guardId], "rgba(255, 255, 0, 0.25)");
+		drawPolygon(c, visibilityPolygons[guardId], "rgba(0, 0, 255, 0.25)");
 		drawGuardPoints(c, [guards[guardId]]);
 	} 
 };
@@ -234,8 +234,9 @@ function removeDuplicates(guards, visibilities) {
 		var j = i + 1;
 		while(j < guards.length) {
 			if(guards[j].equals(guards[i])) {
-				visibilities.splice(j, 1)
 				guards.splice(j, 1);
+				if(typeof visibilites === 'object')
+					visibilities.splice(j, 1);
 			} else {
 				j++;
 			}
@@ -273,7 +274,7 @@ function addRayMidpointGuards() {
 	visibilityPolygons = fullVisibilityPolygon(pago[mapId].polygon, pago[mapId].guards);
 	removeDuplicates(pago[mapId].guards, visibilityPolygons);
 	redraw();
-}
+}	
 
 function greedySelection(mode) {
 	var mapId = parseInt(document.getElementById("mapId").value) - 1; 
