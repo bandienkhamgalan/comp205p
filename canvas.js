@@ -3,7 +3,7 @@ var panX, panY;
 var triangles, visibilityPolygons;
 var mouseX, mouseY, clicked;
 
-var resolutionMultiplier = 4;
+var resolutionMultiplier = 2;
 
 function initCanvas() {
 	var canvas = document.getElementById("myCanvas");
@@ -98,27 +98,29 @@ function recompute() {
 }
 
 function redraw() {
-	var canvas = document.getElementById("myCanvas");
-	var c = canvas.getContext('2d');
+	if(document.getElementById("draw").checked) {
+		var canvas = document.getElementById("myCanvas");
+		var c = canvas.getContext('2d');
 
-	var mapId = parseInt(document.getElementById("mapId").value) - 1;
-	c.setTransform(1,0,0,1,0,0);
-	c.clearRect(0,0, canvas.width, canvas.height);
-	scaleCanvas(c);
+		var mapId = parseInt(document.getElementById("mapId").value) - 1;
+		c.setTransform(1,0,0,1,0,0);
+		c.clearRect(0,0, canvas.width, canvas.height);
+		scaleCanvas(c);
 
-	console.log(pago[mapId].guards.length + " guards for polygon with " + pago[mapId].polygon.vertices.length + " vertices");
+		console.log(pago[mapId].guards.length + " guards for polygon with " + pago[mapId].polygon.vertices.length + " vertices");
 
-	drawPolygon(c, pago[mapId].polygon);
+		drawPolygon(c, pago[mapId].polygon);
 
-	drawVisibilityPolygons(c, pago[mapId].polygon, pago[mapId].guards);
+		drawVisibilityPolygons(c, pago[mapId].polygon, pago[mapId].guards);
 
-	drawInvisibleAreas(c, pago[mapId].polygon);
+		drawInvisibleAreas(c, pago[mapId].polygon);
 
-	// draw origin
-	c.fillStyle = 'yellow';
-	c.beginPath();
-	c.arc(0,0,6 * unit,0,2*Math.PI);
-	c.fill();
+		// draw origin
+		c.fillStyle = 'yellow';
+		c.beginPath();
+		c.arc(0,0,6 * unit,0,2*Math.PI);
+		c.fill();
+	}
 }
 
 function drawVisibilityPolygons(c, polygon, guards) {
