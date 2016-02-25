@@ -69,8 +69,8 @@ DoublyLinkedCycle.prototype.print = function() {
 	} while(currentNode != this);
 }
 
-var formattedGuards = function(number, guards) {
-	var toReturn = ""
+var formattedGuards = function(guards) {
+	var toReturn = "";
 	for(var index = 0 ; index < guards.length ; index++)
 		toReturn += guards[index].toString() + ", ";
 	

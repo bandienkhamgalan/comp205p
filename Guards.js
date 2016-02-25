@@ -351,7 +351,7 @@ var greedilySelectGuardsProbabilistic = function(polygon, guardCandidates, visib
 				if(equals(area, 0)) {
 					guardAdded[index] = true; // ignore this guard
 				} else {
-					currentSum += Math.pow(area, 2);
+					currentSum += area;
 					cumulativeWeights.push(currentSum);
 					solutions.push({index: index, union: addedPolygon});
 				}
@@ -392,7 +392,7 @@ var greedilySelectGuardsProbabilistic = function(polygon, guardCandidates, visib
 					newSolution[visibleGuardIndex] = true;
 				}
 
-				currentSum += Math.pow(currentScore + 1, 2); 
+				currentSum += currentScore + 1; 
 				cumulativeWeights.push(currentSum); 
 				solutions.push({index: i, solution: newSolution, score: currentScore});	
 			}
@@ -425,3 +425,6 @@ var greedilySelectGuardsProbabilistic = function(polygon, guardCandidates, visib
 
 	return toReturn;
 }
+
+/* Automator */
+
