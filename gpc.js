@@ -2136,7 +2136,7 @@ gpcas.geometry.PolyDefault.prototype.addPoly = function( p) {
 	
     if( (m_List.size() > 0) && m_IsHole )
       {
-         alert("ERROR : Cannot add polys to something designated as a hole.");
+         //alert("ERROR : Cannot add polys to something designated as a hole.");
       }
     m_List.add( p );
 }
@@ -2230,7 +2230,7 @@ gpcas.geometry.PolyDefault.prototype.isHole = function () {
 	
       if( m_List.size() > 1)
       {
-         alert( "Cannot call on a poly made up of more than one poly." );
+        // alert( "Cannot call on a poly made up of more than one poly." );
       }
       return m_IsHole ;
 }
@@ -2244,7 +2244,7 @@ gpcas.geometry.PolyDefault.prototype.setIsHole = function(isHole) {
     var m_List = this.m_List;
 	if( m_List.size() > 1)
       {
-         alert( "Cannot call on a poly made up of more than one poly." );
+         //alert( "Cannot call on a poly made up of more than one poly." );
       }
     this.m_IsHole = isHole ;
 }
@@ -2268,7 +2268,7 @@ gpcas.geometry.PolyDefault.prototype.setContributing = function( polyIndex, cont
     var m_List = this.m_List;
 	if( m_List.size() != 1)
       {
-        alert( "Only applies to polys of size 1" );
+       //alert( "Only applies to polys of size 1" );
       }
      (m_List.get(polyIndex)).setContributing( 0, contributes );
 }
@@ -2673,7 +2673,7 @@ gpcas.geometry.PolySimple.prototype.addPoint = function(p) {
     * Throws IllegalStateexception if called
     */
 gpcas.geometry.PolySimple.prototype.addPoly = function(p) {
-    alert("Cannot add poly to a simple poly.");
+   // alert("Cannot add poly to a simple poly.");
 }
    
    /**
@@ -2712,7 +2712,7 @@ gpcas.geometry.PolySimple.prototype.getBounds = function() {
 gpcas.geometry.PolySimple.prototype.getInnerPoly = function(polyIndex) {
   if( polyIndex != 0)
   {
-	 alert("PolySimple only has one poly");
+	 //alert("PolySimple only has one poly");
   }
   return this ;
 }
@@ -2786,7 +2786,7 @@ gpcas.geometry.PolySimple.prototype.isHole = function() {
     * Throws IllegalStateException if called.
     */
 gpcas.geometry.PolySimple.prototype.setIsHole =function(isHole) {
-    alert("PolySimple cannot be a hole");
+  //  alert("PolySimple cannot be a hole");
 }
    
    /**
@@ -2798,7 +2798,7 @@ gpcas.geometry.PolySimple.prototype.setIsHole =function(isHole) {
 gpcas.geometry.PolySimple.prototype.isContributing = function(polyIndex) {
   if( polyIndex != 0)
   {
-	 alert("PolySimple only has one poly");
+	// alert("PolySimple only has one poly");
   }
   return this.m_Contributes ;
 }
@@ -2812,7 +2812,7 @@ gpcas.geometry.PolySimple.prototype.isContributing = function(polyIndex) {
 gpcas.geometry.PolySimple.prototype.setContributing = function( polyIndex, contributes) {
       if( polyIndex != 0)
       {
-         alert("PolySimple only has one poly");
+       //  alert("PolySimple only has one poly");
       }
       this.m_Contributes = contributes ;
    }

@@ -90,7 +90,7 @@ var shuffleInSync = function(a, b) {
 		a[index] = a[indexToSwap];
 		a[indexToSwap] = temp;
 
-		temp= b[index];
+		temp = b[index];
 		b[index] = b[indexToSwap];
 		b[indexToSwap] = temp;
 	}
@@ -446,6 +446,3 @@ var greedilySelectGuardsProbabilistic = function(polygon, guardCandidates, visib
 
 	return toReturn;
 }
-
-/* Automator */
-
