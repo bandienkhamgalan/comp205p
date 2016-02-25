@@ -68,3 +68,11 @@ DoublyLinkedCycle.prototype.print = function() {
 		currentNode = currentNode.next;
 	} while(currentNode != this);
 }
+
+var formattedGuards = function(number, guards) {
+	var toReturn = ""
+	for(var index = 0 ; index < guards.length ; index++)
+		toReturn += guards[index].toString() + ", ";
+	
+	return toReturn.length > 0 ? toReturn.slice(0, -2) : toReturn;
+}

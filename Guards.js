@@ -138,6 +138,8 @@ function removeRedundantGuards(polygon, guards, visibilityPolygons, mode) {
 		var visibilityPolygon = visibilityPolygons.splice(0, 1)[0];
 		count++;
 
+		console.log("Checking if removing guard " + count + " out of " + length + " invalidates visibility");
+
 		// check if removing guard makes an area non visible
 		if(!polygon.allAreasVisible(visibilityPolygons)) {
 			// backtrack
@@ -336,7 +338,10 @@ var greedilySelectGuardsProbabilistic = function(polygon, guardCandidates, visib
 		var maxScoreIndex = -1;
 		if(scoring == "area") {			
 			// add guard which adds most area
-			var maxAddedUnion;
+			var solutions = [];
+			var cumulativeWeights = [];
+			var currentSum = 0;
+
 			for(var index = 0 ; index < guardCandidates.length ; index++) {
 				if(guardAdded[index])
 					continue;
@@ -345,22 +350,34 @@ var greedilySelectGuardsProbabilistic = function(polygon, guardCandidates, visib
 				var area = addedPolygon.getArea();
 				if(equals(area, 0)) {
 					guardAdded[index] = true; // ignore this guard
-				} else if(area > maxScore) {
-					maxScore = area;
-					maxScoreIndex = index;
-					maxAddedUnion = addedPolygon;
+				} else {
+					currentSum += Math.pow(area, 2);
+					cumulativeWeights.push(currentSum);
+					solutions.push({index: index, union: addedPolygon});
 				}
 			}
 
-			guardAdded[maxScoreIndex] = true;
-			toReturn.guards.push(guardCandidates[maxScoreIndex]);
-			toReturn.visibilityPolygons.push(visibilityPolygons[maxScoreIndex]);
+			var random = Math.random() * currentSum;
+			var choice;
+			for(var index = 0 ; index < cumulativeWeights.length ; index++ ) {
+				if(random < cumulativeWeights[index]) {
+					choice = solutions[index];
+					break;
+				}
+			}
 
-			union = maxAddedUnion;
-			console.log("Choosing " + guardCandidates[maxScoreIndex] + " which adds " + (maxScore - union.getArea()));
+			guardAdded[choice.index] = true;
+			toReturn.guards.push(guardCandidates[choice.index]);
+			toReturn.visibilityPolygons.push(visibilityPolygons[choice.index]);
+
+			union = choice.union;
+			console.log("Choosing " + guardCandidates[choice.index] + " which adds " + (maxScore - choice.union.getArea()));
 		} else if (scoring == "guards") {
 			// add guard which reveals most guards
-			var maxSolution;
+			var solutions = [];
+			var cumulativeWeights = [];
+			var currentSum = 0;
+
 			for(var i = 0 ; i < guardsVisible.length ; i++) {
 				if(guardAdded[i])
 					continue;
@@ -375,21 +392,28 @@ var greedilySelectGuardsProbabilistic = function(polygon, guardCandidates, visib
 					newSolution[visibleGuardIndex] = true;
 				}
 
-				if(currentScore > maxScore) {
-					maxScore = currentScore;
-					maxScoreIndex = i;
-					maxSolution = newSolution;
+				currentSum += Math.pow(currentScore + 1, 2); 
+				cumulativeWeights.push(currentSum); 
+				solutions.push({index: i, solution: newSolution, score: currentScore});	
+			}
+
+			var random = Math.random() * currentSum;
+			var choice;
+			for(var index = 0 ; index < cumulativeWeights.length ; index++ ) {
+				if(random < cumulativeWeights[index]) {
+					choice = solutions[index];
+					break;
 				}
 			}
 
-			if(maxScoreIndex >= 0) {
-				console.log("Choosing " + guardCandidates[maxScoreIndex] + " which makes " + maxScore + " more vertices visible. ");
-				guardsVisible = maxSolution;
-				guardsVisibleCount += maxScore;
-				guardAdded[maxScoreIndex] = true;
-				union = union.union(visibilityPolygons[maxScoreIndex].gpcPolygon(polygon));	
-				toReturn.guards.push(guardCandidates[maxScoreIndex]);
-				toReturn.visibilityPolygons.push(visibilityPolygons[maxScoreIndex]);
+			if(typeof choice === 'object') {
+				console.log("Choosing " + guardCandidates[choice.index] + " which makes " + choice.score + " more vertices visible. ");
+				guardsVisible = choice.solution;
+				guardsVisibleCount += choice.score;
+				guardAdded[choice.index] = true;
+				union = union.union(visibilityPolygons[choice.index].gpcPolygon(polygon));	
+				toReturn.guards.push(guardCandidates[choice.index]);
+				toReturn.visibilityPolygons.push(visibilityPolygons[choice.index]);
 				if(guardsVisibleCount < guardCandidates.length)
 					continue;
 			}

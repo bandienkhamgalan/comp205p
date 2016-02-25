@@ -185,6 +185,18 @@ Polygon.prototype.difference = function(polygons, offsetPolygon) {
 }
 
 // Returns {polygons: [Polygon], holes: [Polygon]}
+Polygon.prototype.intersection = function(polygons, offsetPolygon) {
+	if(typeof offsetPolygon === 'undefined')
+		offsetPolygon = this;
+
+	var intersection = this.gpcPolygon(offsetPolygon);
+	for(var x = 0 ; x < polygons.length ; x++)
+		intersection = intersection.intersection(polygons[x].gpcPolygon(offsetPolygon)); 
+
+	return Polygon.gpcToComplexPolygons(intersection, offsetPolygon);
+}
+
+// Returns {polygons: [Polygon], holes: [Polygon]}
 Polygon.gpcToComplexPolygons = function(gpc, offsetPolygon) {
 	var complexPolygon = {polygons: [], holes: [], gpc: gpc};
 	var innerPolygonCount = gpc.getNumInnerPoly();

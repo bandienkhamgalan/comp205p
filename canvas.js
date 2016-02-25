@@ -45,7 +45,7 @@ function initCanvas() {
 		panX *= Math.pow(1.0025, delta) * (x * resolutionMultiplier / canvas.width);
 		panY *= Math.pow(1.0025, delta) * (y * resolutionMultiplier / canvas.height); */
 		scaleFactor *= Math.pow(1.025, delta);
-		unit = 0.005 * 200 / scaleFactor;
+		unit = 0.0025 * 200 / scaleFactor;
 		redraw();
 	});
 
@@ -281,6 +281,14 @@ function addRayMidpointGuards() {
 function greedySelection(mode) {
 	var mapId = parseInt(document.getElementById("mapId").value) - 1; 
 	var update = greedilySelectGuards(pago[mapId].polygon, pago[mapId].guards, visibilityPolygons, mode);
+	pago[mapId].guards = update.guards;
+	visibilityPolygons = update.visibilityPolygons;
+	redraw();
+}
+
+function greedySelectionProbabilistic(mode) {
+	var mapId = parseInt(document.getElementById("mapId").value) - 1; 
+	var update = greedilySelectGuardsProbabilistic(pago[mapId].polygon, pago[mapId].guards, visibilityPolygons, mode);
 	pago[mapId].guards = update.guards;
 	visibilityPolygons = update.visibilityPolygons;
 	redraw();
