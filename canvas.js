@@ -2,6 +2,7 @@ var pago, scaleFactor = 1, unit;
 var panX, panY;
 var triangles, visibilityPolygons;
 var mouseX, mouseY, clicked;
+var worker;
 
 var resolutionMultiplier = 2;
 
@@ -195,15 +196,6 @@ function drawGuardPoints(c, points) {
 	}
 }
 
-function computeGuards() {
-	var mapId = parseInt(document.getElementById("mapId").value) - 1;
-	pago[mapId].guards = pago[mapId].polygon.guardPositions();
-	console.log(pago[mapId].guards.length + " guards found");
-	document.getElementById("guardId").value = -1;
-	recompute();
-	redraw();
-}
-
 function findRefutationPoints() {
 	var output = "xerus\ngsfgscj4pdedl7v2jv395a86eh\n";
 	for(var i = 0 ; i < pago.length ; i++) {
@@ -237,7 +229,7 @@ function removeDuplicates(guards, visibilities) {
 		while(j < guards.length) {
 			if(guards[j].equals(guards[i])) {
 				guards.splice(j, 1);
-				if(typeof visibilites === 'object')
+				if(typeof visibilities === 'object')
 					visibilities.splice(j, 1);
 			} else {
 				j++;

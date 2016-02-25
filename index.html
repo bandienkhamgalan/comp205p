@@ -132,9 +132,6 @@
         <button onclick="removeRedundantGuardsClicked('sorted')">Remove Redundant (Sorted)</button>
       </div>
       <div>
-        <button onclick="removeRedundantGuardsClicked('weighted')">Remove Redundant (Weight)</button>
-      </div>
-      <div>
         <button onclick="greedySelection('guards')">Greedy Selection (Guard)</button>
       </div>
       <div>
@@ -146,9 +143,19 @@
       <div>
         <button onclick="greedySelectionProbabilistic('area')">Probabilistic Selection (Area)</button>
       </div>
+      <br />
+      <div>
+        <button onclick="document.getElementById('myCanvas').style.display='none';document.getElementById('compute').style.display='block';">Compute All</button>
+      </div>
     </fieldset>
   </div>
-  <canvas id="myCanvas" style="float:right">Sorry, update your browser</canvas>
+  <canvas id="myCanvas" style="float:left">Sorry, update your browser</canvas>
+  <div id="compute" style="display:none;float:left;background-color:black;width:calc(100% - 250px);">
+  <textarea id="computeStatus" style="display:block;width:100%;margin:5px;"></textarea>
+  <textarea id="computeResults" style="display:block;width:100%;">
+  fdsa
+  </textarea>
+  </div>
   <script> initCanvas(); </script>
 </body>
 </html>
