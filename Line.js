@@ -28,8 +28,6 @@ Line.prototype.intersectionPoint = function(line) {
 	if (equals(d, 0))
 		return null;
 	
-	var u = ((p3x - p1x)*(p4y - p3y) - (p3y - p1y)*(p4x - p3x))/d;
-    var v = ((p3x - p1x)*(p2y - p1y) - (p3y - p1y)*(p2x - p1x))/d;
     var u = ((p3x - p1x)*(p4y - p3y) - (p3y - p1y)*(p4x - p3x))/d;
     var v = ((p3x - p1x)*(p2y - p1y) - (p3y - p1y)*(p2x - p1x))/d;
     if (lessThan(u, 0.0) || greaterThan(u, 1.0))

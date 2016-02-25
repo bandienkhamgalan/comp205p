@@ -123,7 +123,7 @@ var isVertexReachable = function(vertex, polygon, guard){
 	var intersectionPoints = polygon.intersectionsWithLine(guardToVertex, true);
 
 	var previous = guard;
-	for( var index = 1 ; index < intersectionPoints.length ; index++ ) {
+	for( var index = 0 ; index < intersectionPoints.length ; index++ ) {
 		var point = intersectionPoints[index];
 		if( !polygon.containsPoint(new Line(previous, point).midpoint(), true) )
 			return false;

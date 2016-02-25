@@ -8,8 +8,8 @@ var resolutionMultiplier = 4;
 function initCanvas() {
 	var canvas = document.getElementById("myCanvas");
 
-	var width = window.innerWidth - 10;
-	var height = window.innerHeight - 50; 
+	var width = window.innerWidth - 10 - 250;
+	var height = window.innerHeight - 10; 
 	canvas.width = resolutionMultiplier * width;
 	canvas.height = resolutionMultiplier * height;
 	canvas.style.width = width;
@@ -71,22 +71,16 @@ function initCanvas() {
 
 function newFile(file) {
 	getPolygonAndGuards(file, function(pag) {
-		if(pag.length > 0 && pag[0].guards.length == 0 ) {
-			for(var index = 0 ; index < pag.length ; index++) {
-				pag[index].guards = pag[index].polygon.guardPositions();
-			}
-		}
-
 		pago = pag;
 		recompute();
 		redraw();
 	});
 }
 
-function guardAtEveryVertex() {
+function removeAllGuards() {
 	var mapId = parseInt(document.getElementById("mapId").value) - 1;
-	pago[mapId].guards = pago[mapId].polygon.vertices.slice();
-	visibilityPolygons = fullVisibilityPolygon(pago[mapId].polygon, pago[mapId].guards);
+	pago[mapId].guards = [];
+	visibilityPolygons = [];
 	redraw();
 }
 
@@ -142,28 +136,20 @@ function drawVisibilityPolygons(c, polygon, guards) {
 function drawInvisibleAreas(c, polygon) {
 	// draw nonVisibleAreas
 	var nonVisibleAreas = polygon.nonVisibleAreas(visibilityPolygons);
-	for( var index = 0 ; index < nonVisibleAreas.polygons.length ; index++ )
-		drawPolygon(c, nonVisibleAreas.polygons[index], "firebrick");
+	for( var index = 0 ; index < nonVisibleAreas.length ; index++ )
+		drawPolygon(c, nonVisibleAreas[index], "firebrick");
 
 	console.log("Checking if entire polygon is visible by guards...");
-	if( nonVisibleAreas.polygons.length > 0 ) {
+	if( nonVisibleAreas.length > 0 ) {
 		// plot & log point in non visible area
-		var nonVisiblePoint;
-		var index = 0;
-		while(typeof nonVisiblePoint === 'undefined' && index < nonVisibleAreas.polygons.length)
-			nonVisiblePoint = nonVisibleAreas.polygons[index++].pointInPolygon();
-
-		if( typeof nonVisiblePoint === 'undefined' ) {
-			console.log("All areas visible. ");
-		}
-		else {
-			console.log("Not all areas visible. Non-visible point: " + nonVisiblePoint)
-			console.log(nonVisiblePoint);
-			c.fillStyle = 'lawngreen';
-			c.beginPath();
-			c.arc(nonVisiblePoint.x, nonVisiblePoint.y, 20 * unit, 0, 2 * Math.PI);
-			c.fill();
-		}
+		nonVisiblePoint = nonVisibleAreas[0].pointInPolygon();
+		
+		console.log("Not all areas visible. Non-visible point: " + nonVisiblePoint)
+		console.log(nonVisiblePoint);
+		c.fillStyle = 'lawngreen';
+		c.beginPath();
+		c.arc(nonVisiblePoint.x, nonVisiblePoint.y, 20 * unit, 0, 2 * Math.PI);
+		c.fill();
 	}
 	else
 		console.log("All areas visible. ");
@@ -224,26 +210,75 @@ function findRefutationPoints() {
 		currentVisibilityPolygons = fullVisibilityPolygon(polygon, guards);
 		var nonVisibleAreas = polygon.nonVisibleAreas(currentVisibilityPolygons);
 
-		if(nonVisibleAreas.polygons.length > 0) {
+		if(nonVisibleAreas.length > 0) {
 			// plot & log point in non visible area
-			var nonVisiblePoint = undefined;
-			var j = 0;
-			while(typeof nonVisiblePoint === 'undefined' && j < nonVisibleAreas.polygons.length)
-				nonVisiblePoint = nonVisibleAreas.polygons[j++].pointInPolygon();
-
-			if( nonVisiblePoint instanceof Point ) {
-				console.log((i + 1) + ": " + nonVisiblePoint + "\n");
-				output += (i + 1) + ": " + nonVisiblePoint + "\n";
-			}
+			nonVisiblePoint = nonVisibleAreas[0].pointInPolygon();
+			console.log((i + 1) + ": " + nonVisiblePoint + "\n");
+			output += (i + 1) + ": " + nonVisiblePoint + "\n";
 		}
 	}
+	
 	console.log(output);
 	var download = "data:application/octet-stream;filename=output.txt," + encodeURIComponent(output);
 	var newWindow = window.open(download, 'output.txt');
 }
 
-function removeRedundantGuardsClicked() {
+function removeRedundantGuardsClicked(mode) {
 	var mapId = parseInt(document.getElementById("mapId").value) - 1; 
-	removeRedundantGuards(pago[mapId].polygon, pago[mapId].guards, visibilityPolygons);
+	removeRedundantGuards(pago[mapId].polygon, pago[mapId].guards, visibilityPolygons, mode);
+	redraw();
+}
+
+function removeDuplicates(guards, visibilities) {
+	for(var i = 0 ; i < guards.length ; i++) {
+		var j = i + 1;
+		while(j < guards.length) {
+			if(guards[j].equals(guards[i])) {
+				visibilities.splice(j, 1)
+				guards.splice(j, 1);
+			} else {
+				j++;
+			}
+		}
+	}
+}
+
+function addColorGuards() {
+	var mapId = parseInt(document.getElementById("mapId").value) - 1;
+	pago[mapId].guards.push(...pago[mapId].polygon.colorGuards());
+	visibilityPolygons = fullVisibilityPolygon(pago[mapId].polygon, pago[mapId].guards);
+	removeDuplicates(pago[mapId].guards, visibilityPolygons);
+	redraw();
+}
+
+function addVertexGuards() {
+	var mapId = parseInt(document.getElementById("mapId").value) - 1;
+	pago[mapId].guards.push(...pago[mapId].polygon.vertices.slice());
+	visibilityPolygons = fullVisibilityPolygon(pago[mapId].polygon, pago[mapId].guards);
+	removeDuplicates(pago[mapId].guards, visibilityPolygons);
+	redraw();
+}
+
+function addRayGuards() {
+	var mapId = parseInt(document.getElementById("mapId").value) - 1;
+	pago[mapId].guards.push(...pago[mapId].polygon.visibilityExtensions("boundary"));
+	visibilityPolygons = fullVisibilityPolygon(pago[mapId].polygon, pago[mapId].guards);
+	removeDuplicates(pago[mapId].guards, visibilityPolygons);
+	redraw();
+}
+
+function addRayMidpointGuards() {
+	var mapId = parseInt(document.getElementById("mapId").value) - 1;
+	pago[mapId].guards.push(...pago[mapId].polygon.visibilityExtensions("midpoint"));
+	visibilityPolygons = fullVisibilityPolygon(pago[mapId].polygon, pago[mapId].guards);
+	removeDuplicates(pago[mapId].guards, visibilityPolygons);
+	redraw();
+}
+
+function greedySelection(mode) {
+	var mapId = parseInt(document.getElementById("mapId").value) - 1; 
+	var update = greedilySelectGuards(pago[mapId].polygon, pago[mapId].guards, visibilityPolygons, mode);
+	pago[mapId].guards = update.guards;
+	visibilityPolygons = update.visibilityPolygons;
 	redraw();
 }

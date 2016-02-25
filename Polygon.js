@@ -100,7 +100,7 @@ Polygon.prototype.intersectionsWithLine = function(line, sorted) {
 	for(var index = 0 ; index < this.lines.length ; index++) {
 		var edge = this.lines[index];
 		var intersectionPoint = edge.intersectionPoint(line);
-		if(intersectionPoint != null && toReturn.indexOf(intersectionPoint) < 0) {
+		if(intersectionPoint != null && toReturn.filter(a => { return a.equals(intersectionPoint); }).length == 0) {
 			toReturn.push(intersectionPoint);
 		}
 	}
@@ -147,8 +147,12 @@ Polygon.prototype.gpcPolygon = function(offsetPolygon) {
 	return this.GPC;
 }
 
+// will not be accurate if polygon is modified
 Polygon.prototype.area = function() {
-	return this.gpcPolygon().getArea();
+	if(typeof this.computedArea === 'undefined')
+		this.computedArea = this.gpcPolygon().getArea();
+
+	return this.computedArea;
 }
 
 // Returns {polygons: [Polygon], holes: [Polygon]}
@@ -198,11 +202,61 @@ Polygon.gpcToComplexPolygons = function(gpc, offsetPolygon) {
 	return complexPolygon;
 }
 
-// Returns {polygons: [Polygon], holes: [Polygon]}
-Polygon.prototype.nonVisibleAreas = function(visibilityPolygons) {
-	var difference = this.gpcPolygon(this);
-	for(var index = 0 ; index < visibilityPolygons.length ; index++ ) 
-		difference = difference.difference(visibilityPolygons[index].gpcPolygon(this));
+// Returns True if visibilityPolygons covers all areas
+// unionedGPC is an optional parameter for optimization, should hold union of visibilityPolygons
+Polygon.prototype.allAreasVisible = function(visibilityPolygons, unionedGPC) {
+	// fast check -> all vertices visible
+	for(var i = 0 ; i < this.vertices.length ; i++ ) {
+		var searchVertex = this.vertices[i];
+		var vertexFound = false;
+		for(var j = 0 ; j < visibilityPolygons.length ; j++ ) {
+			if(visibilityPolygons[j].vertices.filter(vertex => {return vertex.equals(searchVertex)}).length > 0) {
+				vertexFound = true;
+				break;
+			}
+		}
 
-	return Polygon.gpcToComplexPolygons(difference, this);
+		if(!vertexFound) {
+			return false;
+		}	
+	}
+
+	// slow, guaranteed check -> union of visibility polygons equal to original polygon
+	if(typeof unionedGPC === 'undefined') {
+		// calculate union
+		var nonVisibleAreas = this.nonVisibleAreas(visibilityPolygons);
+		return nonVisibleAreas.length == 0;
+
+	} else {
+		// use supplied/precomputed union
+		var nonVisibleAreas = this.nonVisibleAreasGPC(unionedGPC);
+		return nonVisibleAreas.length == 0;
+	}
+}
+
+// Returns [Polygon]
+Polygon.prototype.nonVisibleAreas = function(visibilityPolygons) {
+	var union = new PolyDefault();
+	for(var index = 0 ; index < visibilityPolygons.length ; index++ ) 
+		union = union.union(visibilityPolygons[index].gpcPolygon(this));
+
+	return this.nonVisibleAreasGPC(union);
+} 
+
+// Returns [Polygon]
+Polygon.prototype.nonVisibleAreasGPC = function(unionedGPC) {
+	var areas = Polygon.gpcToComplexPolygons(this.gpcPolygon(this).difference(unionedGPC), this).polygons;
+
+	// remove invalid nonVisibleAreas (areas where a point inside cannot be found)
+	if(areas.length > 0) {
+		var index = 0;
+		while(index < areas.length) {
+			if( areas[index].pointInPolygon() instanceof Point )
+				index++;
+			else
+				areas.splice(index, 1);
+		}
+	}
+
+	return areas;
 } 

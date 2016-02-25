@@ -11,34 +11,134 @@
 <style type="text/css">
   body {
     margin: 5px;
-    background-color: slategrey;
+    background-color: dimgrey;
     font-family:Arial, Helvetica, Verdana;
     font-size:0.8em;
+    color:white;
   }
+
+  fieldset {
+    margin:5px;
+  }
+
+  fieldset legend {
+    font-weight:bold;
+    font-size:1.25em;
+  }
+
+  fieldset * {
+    margin:2.5px;
+  }
+
   input[type="file"] {
   	width:180px;
   }
+
   input[type="number"] {
   	width:40px;
   }
+
   #myCanvas {
   	cursor: crosshair;
+    background-color:gray;
+  }
+
+  #sidebar {
+    margin-right:5px;
+    float:left;
+    width:245px;
+  }
+
+  button {
+  -webkit-border-radius: 11;
+  -moz-border-radius: 11;
+  border-radius: 11px;
+  border:none;
+  outline:0;
+  font-family: Arial;
+  color: #ffffff;
+  font-size: 13px;
+  background: goldenrod;
+  padding: 5px 10px 5px 10px;
+  text-decoration: none;
+}
+
+  button:hover {
+    background: darkgoldenrod;
+    text-decoration: none;
   }
 </style>
 <body>
-<canvas id="myCanvas">Sorry, update your browser</canvas>
-<script> initCanvas(); </script>
-<div style="margin-top:5px;">
-<input type="file" name="inputFile" id="inputFile" onchange="newFile(this.files[0])"></input>
-Polygon ID
-<input type="number" id="mapId" onchange="recompute();redraw()" value="1" step="1"></input>
-Guard ID
-<input type="number" id="guardId" onchange="redraw()" value="1" step="1"></input>
-<span id="mouseCoordinates"></span>
-<button onclick="findRefutationPoints()">Download Refutation Points For All</button>
-<button onclick="computeGuards()">Compute Guard Positions</button>
-<button onclick="guardAtEveryVertex()">Fill Guards</button>
-<button onclick="removeRedundantGuardsClicked()">Remove Redundant Guards</button>
-</div>
+  <div id="sidebar">
+    <fieldset>
+      <legend>Load</legend>
+      <input type="file" name="inputFile" id="inputFile" onchange="newFile(this.files[0])"></input>
+      Polygon
+      <input type="number" id="mapId" onchange="recompute();redraw()" value="1" step="1"></input>
+      Guard
+      <input type="number" id="guardId" onchange="redraw()" value="-1" step="1"></input>
+      <span id="mouseCoordinates"></span>
+    </fieldset>
+
+    <fieldset>
+      <legend>Show</legend>
+      <div>
+        <input type="checkbox" id="triangulation" onchange="redraw()">Triangulation</input>
+      </div>
+      <div>
+        <input type="checkbox" id="guards" onchange="redraw()"></input>
+        Guards
+      </div>
+      <div>
+        <input type="checkbox" id="guards" onchange="redraw()"></input>
+        Visibility Polygons
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Guards</legend>
+      <div>
+        <button onclick="addColorGuards()">Color Vertex</button>
+      </div>
+      <div>
+        <button onclick="addVertexGuards()">Vertex</button>
+      </div>
+      <div>
+        <button onclick="addRayGuards()">Ray Extensions (Boundary)</button>
+      </div>
+      <div>
+        <button onclick="addRayMidpointGuards()">Ray Extensions (Midpoint)</button>
+      </div>
+      <br />
+      <div>
+        <button onclick="removeAllGuards()">Remove All</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Compute</legend>
+      <div>
+        <button onclick="findRefutationPoints()">Refutation Points</button>
+      </div>
+      <br />
+      <div>
+        <button onclick="removeRedundantGuardsClicked('random')">Remove Redundant (Random)</button>
+      </div>
+      <div>
+        <button onclick="removeRedundantGuardsClicked('sorted')">Remove Redundant (Sorted)</button>
+      </div>
+      <div>
+        <button onclick="removeRedundantGuardsClicked('weighted')">Remove Redundant (Weight)</button>
+      </div>
+      <div>
+        <button onclick="greedySelection('vertex')">Greedy Selection (Vertex)</button>
+      </div>
+      <div>
+        <button onclick="greedySelection('area')">Greedy Selection (Area)</button>
+      </div>
+    </fieldset>
+  </div>
+  <canvas id="myCanvas" style="float:right">Sorry, update your browser</canvas>
+  <script> initCanvas(); </script>
 </body>
 </html>
