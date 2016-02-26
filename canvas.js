@@ -285,3 +285,43 @@ function greedySelectionProbabilistic(mode) {
 	visibilityPolygons = update.visibilityPolygons;
 	redraw();
 }
+
+var computeAll = function() {
+	document.getElementById('myCanvas').style.display='none';
+	document.getElementById('compute').style.display='block';
+
+	cancelCompute();
+
+	var targets = [1, 1, 2, 1, 2, 23, 11, 33, 10, 47, 14, 41, 43, 5, 6, 11, 57, 5, 4, 3, 6, 3, 7, 6, 1, 2, 16, 10, 12, 9];
+	var emptyTargets = [];
+	for(var index = 0 ; index < pago.length ; index++)
+		emptyTargets.push(-1);
+
+	try {
+		var numbers = prompt("Please enter indices of polygons to solve", "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30");
+		var indices = numbers.match(/\d+/g).map(str => { return parseInt(str) - 1; });
+		
+		for(var i = 0 ; i < indices.length ; i++)
+			if(indices[i] < targets.length)
+				emptyTargets[indices[i]] = targets[indices[i]];
+		targets = emptyTargets;
+
+		worker = new Worker('automate.js');
+		worker.onmessage = function(message) {
+			if(message.data.type == "status") {
+				document.getElementById('computeStatus').innerHTML = message.data.data;
+			} else if(message.data.type == "results") {
+				document.getElementById('computeResults').innerHTML = message.data.data;
+			}
+		}
+
+		worker.postMessage({polygons: pago.map(a => { return a.polygon }), targets: targets});
+	} catch(err) {
+
+	}
+}
+
+var cancelCompute = function() {
+	if(typeof worker === "object")
+		worker.terminate();
+}

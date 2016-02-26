@@ -82,7 +82,7 @@ Polygon.prototype.colorGuards = function() {
 	else
 		return blueVertices;
 };
-
+ 
 var shuffleInSync = function(a, b) {
 	for( var index = 0 ; index < a.length ; index++ ) {
 		var indexToSwap = parseInt(Math.random() * (a.length - index) + index);
@@ -134,11 +134,10 @@ function removeRedundantGuards(polygon, guards, visibilityPolygons, mode) {
 	var length = guards.length;
 	var count = 0;
 	while(count < length) {
+		console.log("Redundant guards: considering " + count + " out of " + length + " to cut out");
 		var guard = guards.splice(0, 1)[0];
 		var visibilityPolygon = visibilityPolygons.splice(0, 1)[0];
 		count++;
-
-		console.log("Checking if removing guard " + count + " out of " + length + " invalidates visibility");
 
 		// check if removing guard makes an area non visible
 		if(!polygon.allAreasVisible(visibilityPolygons)) {
@@ -149,6 +148,8 @@ function removeRedundantGuards(polygon, guards, visibilityPolygons, mode) {
 
 		// passed all conditions, do not push back guard/visibilityPolygon
 	};
+
+	console.log("Chose " + guards.length + " guards");
 }
 
 /* Iteration 3 – Greedy Algorithm on vertices & extended visible points from every vertex */
@@ -157,6 +158,7 @@ function removeRedundantGuards(polygon, guards, visibilityPolygons, mode) {
 // specify at "boundary" or "midpoint" as parameter
 Polygon.prototype.visibilityExtensions = function(mode) {
 	var candidates = [];
+	var rays = [];
 
 	for(var i = 0 ; i < this.vertices.length ; i++) {
 		for(var j = 0 ; j < this.vertices.length ; j++ ) {
@@ -193,6 +195,12 @@ Polygon.prototype.visibilityExtensions = function(mode) {
 							var midpoint = new Line(this.vertices[j], current).midpoint();
 							if( candidates.filter(a => { return a.equals(midpoint)}).length == 0 )
 								candidates.push(midpoint);
+						} else if (mode == "vertexIntersections") {
+							//rays.push(new Line(this.vertices[j], current));
+							rays.push(new Line(this.vertices[i], this.vertices[j]));
+						} else if (mode == "extensionIntersections") {
+							rays.push(new Line(this.vertices[j], current));
+							//rays.push(new Line(this.vertices[i], this.vertices[j]));
 						}
 						break;
 					}				
@@ -202,6 +210,23 @@ Polygon.prototype.visibilityExtensions = function(mode) {
 			}
 		}
 	} 
+
+
+	if (mode == "vertexIntersections" || mode == "extensionIntersections") {
+		if( rays.length < 1500 )
+		{
+			for (var ray1 = 0; ray1 < rays.length; ray1++) {
+				for (var ray2 = 0; ray2 < rays.length; ray2++) {
+
+					var raysIntersection = rays[ray1].intersectionPoint(rays[ray2]);
+
+					if( raysIntersection != null && candidates.filter(a => { return a.equals(raysIntersection)}).length == 0 )
+						candidates.push(raysIntersection);
+
+				}
+			}
+		}
+	}
 
 	return candidates;
 }
@@ -233,7 +258,7 @@ var greedilySelectGuards = function(polygon, guardCandidates, visibilityPolygons
 	for(var index = 0 ; index < guardCandidates.length ; index++)
 		guardAdded.push(false);
 
-
+	var allAreasVisible = false;
 	for(var a = 0 ; a < length ; a++) {
 		var maxScore = -1;
 		var maxScoreIndex = -1;
@@ -260,7 +285,6 @@ var greedilySelectGuards = function(polygon, guardCandidates, visibilityPolygons
 			toReturn.visibilityPolygons.push(visibilityPolygons[maxScoreIndex]);
 
 			union = maxAddedUnion;
-			console.log("Choosing " + guardCandidates[maxScoreIndex] + " which adds " + (maxScore - union.getArea()));
 		} else if (scoring == "guards") {
 			// add guard which reveals most guards
 			var maxSolution;
@@ -286,7 +310,6 @@ var greedilySelectGuards = function(polygon, guardCandidates, visibilityPolygons
 			}
 
 			if(maxScoreIndex >= 0) {
-				console.log("Choosing " + guardCandidates[maxScoreIndex] + " which makes " + maxScore + " more vertices visible. ");
 				guardsVisible = maxSolution;
 				guardsVisibleCount += maxScore;
 				guardAdded[maxScoreIndex] = true;
@@ -298,9 +321,12 @@ var greedilySelectGuards = function(polygon, guardCandidates, visibilityPolygons
 			}
 		}
 
-		if(polygon.allAreasVisible(toReturn.visibilityPolygons, union))
+		allAreasVisible = polygon.allAreasVisible(toReturn.visibilityPolygons, union);
+		if(allAreasVisible)
 			break;
 	}
+
+	console.log("Greedily chose " + toReturn.guards.length + " guards");
 
 	return toReturn;
 }
@@ -332,7 +358,7 @@ var greedilySelectGuardsProbabilistic = function(polygon, guardCandidates, visib
 	for(var index = 0 ; index < guardCandidates.length ; index++)
 		guardAdded.push(false);
 
-
+	var allAreasVisible = false;
 	for(var a = 0 ; a < length ; a++) {
 		var maxScore = -1;
 		var maxScoreIndex = -1;
@@ -351,7 +377,7 @@ var greedilySelectGuardsProbabilistic = function(polygon, guardCandidates, visib
 				if(equals(area, 0)) {
 					guardAdded[index] = true; // ignore this guard
 				} else {
-					currentSum += area;
+					currentSum += Math.pow(area, 2);
 					cumulativeWeights.push(currentSum);
 					solutions.push({index: index, union: addedPolygon});
 				}
@@ -371,7 +397,6 @@ var greedilySelectGuardsProbabilistic = function(polygon, guardCandidates, visib
 			toReturn.visibilityPolygons.push(visibilityPolygons[choice.index]);
 
 			union = choice.union;
-			console.log("Choosing " + guardCandidates[choice.index] + " which adds " + (maxScore - choice.union.getArea()));
 		} else if (scoring == "guards") {
 			// add guard which reveals most guards
 			var solutions = [];
@@ -407,7 +432,6 @@ var greedilySelectGuardsProbabilistic = function(polygon, guardCandidates, visib
 			}
 
 			if(typeof choice === 'object') {
-				console.log("Choosing " + guardCandidates[choice.index] + " which makes " + choice.score + " more vertices visible. ");
 				guardsVisible = choice.solution;
 				guardsVisibleCount += choice.score;
 				guardAdded[choice.index] = true;
@@ -419,9 +443,11 @@ var greedilySelectGuardsProbabilistic = function(polygon, guardCandidates, visib
 			}
 		}
 
-		if(polygon.allAreasVisible(toReturn.visibilityPolygons, union))
+		allAreasVisible = polygon.allAreasVisible(toReturn.visibilityPolygons, union);
+		if(allAreasVisible)
 			break;
 	}
+	console.log("Probabilistically chose " + toReturn.guards.length + " guards");
 
 	return toReturn;
 }

@@ -6,6 +6,8 @@ var getPolygonAndGuards = function(file, callback) {
 		var output = [];
 		for(var index = 0 ; index < lines.length ; index++) {
 			var string = lines[index];
+			var id = parseInt(string.match(/[^:]+/)[0]);
+
 			string = string.replace(/[^:]: /, "");
 
 			var vertexString = string.match(/[^;]+/);
@@ -18,7 +20,9 @@ var getPolygonAndGuards = function(file, callback) {
 			if(typeof guardString === 'object' && guardString != null && guardString.length == 1)
 				guards = extractPoints(guardString[0]);
 
-			output.push({ polygon: new Polygon(vertices), guards: guards });
+			var polygon = new Polygon(vertices);
+			polygon.id = id;
+			output.push({ polygon: polygon, guards: guards });
 		};
 
 		callback(output);
