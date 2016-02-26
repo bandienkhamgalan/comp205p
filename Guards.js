@@ -210,7 +210,7 @@ Polygon.prototype.visibilityExtensions = function(mode) {
 		}
 	}
 
-	if (mode == "intersections") {
+	if (mode == "vertexIntersections" || mode == "extensionIntersections") {
 
 		console.log("rays has length: " + rays.length);
 
