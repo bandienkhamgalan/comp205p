@@ -254,9 +254,17 @@ function addVertexGuards() {
 	redraw();
 }
 
-function addIntersectionGuards() {
+function addVertexIntersectionGuards() {
 	var mapId = parseInt(document.getElementById("mapId").value) - 1;
-	pago[mapId].guards.push(...pago[mapId].polygon.visibilityExtensions("intersections"));
+	pago[mapId].guards.push(...pago[mapId].polygon.visibilityExtensions("vertexIntersections"));
+	visibilityPolygons = fullVisibilityPolygon(pago[mapId].polygon, pago[mapId].guards);
+	removeDuplicates(pago[mapId].guards, visibilityPolygons);
+	redraw();
+}
+
+function addExtensionIntersectionGuards() {
+	var mapId = parseInt(document.getElementById("mapId").value) - 1;
+	pago[mapId].guards.push(...pago[mapId].polygon.visibilityExtensions("extensionIntersections"));
 	visibilityPolygons = fullVisibilityPolygon(pago[mapId].polygon, pago[mapId].guards);
 	removeDuplicates(pago[mapId].guards, visibilityPolygons);
 	redraw();

@@ -194,7 +194,10 @@ Polygon.prototype.visibilityExtensions = function(mode) {
 							var midpoint = new Line(this.vertices[j], current).midpoint();
 							if( candidates.filter(a => { return a.equals(midpoint)}).length == 0 )
 								candidates.push(midpoint);
-						} else if (mode == "intersections") {
+						} else if (mode == "vertexIntersections") {
+							//rays.push(new Line(this.vertices[j], current));
+							rays.push(new Line(this.vertices[i], this.vertices[j]));
+						} else if (mode == "extensionIntersections") {
 							rays.push(new Line(this.vertices[j], current));
 							//rays.push(new Line(this.vertices[i], this.vertices[j]));
 						}
