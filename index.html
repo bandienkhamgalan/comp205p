@@ -108,7 +108,10 @@
         <button onclick="addVertexGuards()">Vertex</button>
       </div>
       <div>
-        <button onclick="addRayGuards()">Ray Extensions (Intersections)</button>
+        <button onclick="addIntersectionGuards()">Ray Extensions (Intersections)</button>
+      </div>
+      <div>
+        <button onclick="addRayGuards()">Ray Extensions (Boundary)</button>
       </div>
       <div>
         <button onclick="addRayMidpointGuards()">Ray Extensions (Midpoint)</button>
@@ -138,10 +141,10 @@
         <button onclick="greedySelection('area')">Greedy Selection (Area)</button>
       </div>
       <div>
-        <button onclick="greedySelectionProbabilistic('guards')">Probabilistic Selection (Guard)</button>
+        <button onclick="greedySelectionProbabilisticClicked('guards')">Probabilistic Selection (Guard)</button>
       </div>
       <div>
-        <button onclick="greedySelectionProbabilistic('area')">Probabilistic Selection (Area)</button>
+        <button onclick="greedySelectionProbabilisticClicked('area')">Probabilistic Selection (Area)</button>
       </div>
       <br />
       <div>

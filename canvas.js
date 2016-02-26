@@ -254,9 +254,17 @@ function addVertexGuards() {
 	redraw();
 }
 
-function addRayGuards() {
+function addIntersectionGuards() {
 	var mapId = parseInt(document.getElementById("mapId").value) - 1;
 	pago[mapId].guards.push(...pago[mapId].polygon.visibilityExtensions("intersections"));
+	visibilityPolygons = fullVisibilityPolygon(pago[mapId].polygon, pago[mapId].guards);
+	removeDuplicates(pago[mapId].guards, visibilityPolygons);
+	redraw();
+}
+
+function addRayGuards() {
+	var mapId = parseInt(document.getElementById("mapId").value) - 1;
+	pago[mapId].guards.push(...pago[mapId].polygon.visibilityExtensions("boundary"));
 	visibilityPolygons = fullVisibilityPolygon(pago[mapId].polygon, pago[mapId].guards);
 	removeDuplicates(pago[mapId].guards, visibilityPolygons);
 	redraw();
@@ -279,9 +287,24 @@ function greedySelection(mode) {
 }
 
 function greedySelectionProbabilistic(mode) {
-	var mapId = parseInt(document.getElementById("mapId").value) - 1; 
+	var mapId = parseInt(document.getElementById("mapId").value) - 1;
 	var update = greedilySelectGuardsProbabilistic(pago[mapId].polygon, pago[mapId].guards, visibilityPolygons, mode);
 	pago[mapId].guards = update.guards;
 	visibilityPolygons = update.visibilityPolygons;
 	redraw();
+}
+
+function greedySelectionProbabilisticClicked(mode) {
+	var mapId = parseInt(document.getElementById("mapId").value) - 1;
+	var potentialFinalCount = 0;
+	var prevGuardsCount = 100000;
+	while (potentialFinalCount < 50) {
+		greedySelectionProbabilistic(mode);
+		if (pago[mapId].guards.length < prevGuardsCount) {
+			potentialFinalCount = 0;
+			prevGuardsCount = pago[mapId].guards.length;
+		} else {
+			potentialFinalCount++;
+		}
+	}
 }

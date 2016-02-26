@@ -196,7 +196,7 @@ Polygon.prototype.visibilityExtensions = function(mode) {
 								candidates.push(midpoint);
 						} else if (mode == "intersections") {
 							rays.push(new Line(this.vertices[j], current));
-							rays.push(new Line(this.vertices[i], this.vertices[j]));
+							//rays.push(new Line(this.vertices[i], this.vertices[j]));
 						}
 						break;
 					}				
